@@ -292,6 +292,40 @@ main{padding:16px 20px;max-width:1000px;margin:0 auto}
 .cmds{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
 .empty{color:var(--mut);text-align:center;padding:40px}
 .login{max-width:360px;margin:60px auto;text-align:center}.login input{width:100%;margin:10px 0}
+/* Telegram-web uslubidagi chat */
+body.chatmode main{max-width:none;padding:0}
+#chatwrap{display:flex;height:calc(100vh - 62px)}
+#sidebar{width:360px;max-width:42%;border-right:1px solid #0a1017;background:#17212b;display:flex;flex-direction:column}
+.shead{padding:8px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #0a1017;flex:none}
+.shead b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chatlist{flex:1;overflow-y:auto}
+.ci{display:flex;gap:11px;padding:8px 12px;cursor:pointer;align-items:center}
+.ci:hover{background:#202b36}.ci.sel{background:#2b5278}
+.av{border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.ci .mid{flex:1;min-width:0}
+.ci .t1{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.ci .title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci .tm{font-size:12px;color:#6d7f8f;flex:none}
+.ci .prev{color:#8a99a8;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci.sel .prev,.ci.sel .tm{color:#cfe0ef}
+.unb{background:#5288c1;color:#fff;border-radius:12px;min-width:20px;height:20px;padding:0 6px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+#conv{flex:1;display:flex;flex-direction:column;min-width:0}
+#convhead{height:56px;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid #0a1017;background:#17212b;flex:none}
+#convbody{flex:1;overflow-y:auto;padding:14px 6%;background:#0e1621}
+.msg{max-width:74%;margin:3px 0;padding:6px 9px 4px;border-radius:12px;position:relative;clear:both;word-wrap:break-word;white-space:pre-wrap;font-size:14px}
+.msg.in{background:#182533;float:left;border-bottom-left-radius:4px}
+.msg.out{background:#2b5278;float:right;border-bottom-right-radius:4px}
+.msg .snd{font-size:13px;font-weight:600;margin-bottom:2px}
+.msg .mt{font-size:11px;color:#8aa6c2;float:right;margin:6px 0 -2px 10px}
+.msg .media{margin:2px 0}
+.msg img.ph{max-width:100%;border-radius:8px;display:block;cursor:pointer}
+.msg video{max-width:100%;border-radius:8px;display:block}
+.mbtn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px}
+.clr{clear:both}
+.convempty{flex:1;display:flex;align-items:center;justify-content:center;color:#6d7f8f}
+.mobback{display:none}
+@media(max-width:700px){#sidebar{width:100%;max-width:100%}#conv{display:none}body.showconv #sidebar{display:none}body.showconv #conv{display:flex}.mobback{display:inline-flex}}
 </style></head><body>
 <header><div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8e5cff,#3f6bff);display:flex;align-items:center;justify-content:center;font-weight:800">N</div>
 <h1>Neyrogram Admin</h1><div class="sp"></div><span id="status" class="mut"></span>
@@ -334,25 +368,44 @@ return '<div class="dev"><div class="row"><span class="dot '+(online?'on':'')+'"
 (dev.last_log?(' <span class="mut">oxirgi log: '+esc(dev.last_log)+'</span>'):'')+
 '<div class="sp"></div><button class="ghost" onclick="removeDev(\\''+dev.id+'\\')">O\\'chirish</button></div>'+
 (dev.last_result?('<div class="mut" style="margin-top:8px">Oxirgi natija: '+esc(dev.last_result.result)+'</div>'):'')+'</div>';}).join('');}
-function backToDevices(){mode='devices';render();}
-async function openChats(devId,accId){mode='chats';viewCtx={devId,accId};statusEl.textContent='';
-main.innerHTML='<div class="row" style="margin-bottom:12px"><button class="ghost" onclick="backToDevices()">&larr; Qurilmalar</button><span class="name" style="margin-left:10px">'+esc(accName(devId,accId))+' — chatlar</span></div><div id="list" class="empty">Yuklanmoqda...</div>';
+const AVC=['#e17076','#7bc862','#e5ca77','#65aadd','#a695e7','#ee7aae','#6ec9cb','#faa774'];
+function avColor(s){s=s||'';let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return AVC[h%AVC.length];}
+function initials(s){s=(s||'').trim();if(!s)return '#';const p=s.split(/\\s+/);return ((p[0][0]||'')+(p[1]?p[1][0]:'')).toUpperCase();}
+function avatar(name,size){return '<div class="av" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*0.4)+'px;background:'+avColor(name)+'">'+esc(initials(name))+'</div>';}
+function fmtTime(sec){if(!sec)return '';const d=new Date(sec*1000);const p=n=>(n<10?'0':'')+n;return p(d.getHours())+':'+p(d.getMinutes());}
+let CHATS=[];let CURDLG=null;
+function backToDevices(){mode='devices';document.body.classList.remove('chatmode','showconv');render();}
+function openChats(devId,accId){mode='chats';viewCtx={devId,accId,dialogId:null};CURDLG=null;statusEl.textContent=esc(accName(devId,accId));document.body.classList.add('chatmode');document.body.classList.remove('showconv');
+main.innerHTML='<div id="chatwrap"><div id="sidebar"><div class="shead"><button class="ghost" onclick="backToDevices()">&larr;</button><b>'+esc(accName(devId,accId))+'</b></div><div id="chatlist" class="empty">Yuklanmoqda...</div></div><div id="conv"><div class="convempty">Suhbatni tanlang</div></div></div>';
 pollChats(0);}
-async function pollChats(tries){if(mode!=='chats')return;let d;try{d=await api('/api/chats?device='+encodeURIComponent(viewCtx.devId)+'&account='+encodeURIComponent(viewCtx.accId));}catch(e){document.getElementById('list').innerHTML='<div class="empty">Xato: '+esc(e.message)+'</div>';return;}
-const list=document.getElementById('list');if(!list||mode!=='chats')return;
-if(d.pending){list.innerHTML='<div class="empty">Qurilmadan so\\'ralmoqda... ('+(tries+1)+')<br><span class="mut">qurilma onlayn bo\\'lishi kerak</span></div>';if(tries<30)setTimeout(()=>pollChats(tries+1),2500);return;}
-const ds=(d.dialogs||[]);
-list.innerHTML=(d.age!=null?('<div class="mut" style="margin-bottom:8px">kesh: '+Math.floor(d.age/1000)+' s oldin</div>'):'')+
-(ds.length?ds.map(c=>'<div class="acc" style="cursor:pointer" onclick="openMessages(\\''+viewCtx.devId+'\\','+viewCtx.accId+',\\''+c.id+'\\')"><div class="row"><b>'+esc(c.title)+'</b><div class="sp"></div>'+(c.unread?('<span class="badge">'+c.unread+'</span>'):'')+'<span class="mut" style="margin-left:6px">'+fmtDate(c.date)+'</span></div>'+(c.preview?('<div class="mut" style="margin-top:4px">'+esc(c.preview)+'</div>'):'')+'</div>').join(''):'<div class="empty">Chat yo\\'q</div>');}
-async function openMessages(devId,accId,dialogId,refresh){if(!refresh){mode='messages';viewCtx={devId,accId,dialogId};}
-main.innerHTML='<div class="row" style="margin-bottom:12px"><button class="ghost" onclick="openChats(\\''+devId+'\\','+accId+')">&larr; Chatlar</button><div class="sp"></div><button class="ghost" onclick="openMessages(\\''+devId+'\\','+accId+',\\''+dialogId+'\\',1)">Yangilash</button></div><div id="list" class="empty">Yuklanmoqda...</div>';
-pollMsgs(0,refresh?1:0);}
-async function pollMsgs(tries,refresh){if(mode!=='messages')return;let d;try{d=await api('/api/messages?device='+encodeURIComponent(viewCtx.devId)+'&account='+encodeURIComponent(viewCtx.accId)+'&dialog='+encodeURIComponent(viewCtx.dialogId)+(refresh?'&refresh=1':''));}catch(e){document.getElementById('list').innerHTML='<div class="empty">Xato: '+esc(e.message)+'</div>';return;}
-const list=document.getElementById('list');if(!list||mode!=='messages')return;
-if(d.pending){list.innerHTML='<div class="empty">Qurilmadan so\\'ralmoqda... ('+(tries+1)+')</div>';if(tries<30)setTimeout(()=>pollMsgs(tries+1,0),2500);return;}
+async function pollChats(tries){if(mode!=='chats')return;let d;try{d=await api('/api/chats?device='+encodeURIComponent(viewCtx.devId)+'&account='+encodeURIComponent(viewCtx.accId));}catch(e){const l=document.getElementById('chatlist');if(l)l.innerHTML='<div class="empty">Xato: '+esc(e.message)+'</div>';return;}
+const list=document.getElementById('chatlist');if(!list||mode!=='chats')return;
+if(d.pending){list.innerHTML='<div class="empty">Qurilmadan so\\'ralmoqda... ('+(tries+1)+')<br><span class="mut">qurilma onlayn bo\\'lishi kerak</span></div>';if(tries<40)setTimeout(()=>pollChats(tries+1),2500);return;}
+CHATS=(d.dialogs||[]);
+list.innerHTML=CHATS.length?CHATS.map(c=>'<div class="ci" id="ci_'+c.id+'" onclick="selectChat(\\''+c.id+'\\')">'+avatar(c.title,46)+'<div class="mid"><div class="t1"><span class="title">'+esc(c.title)+'</span><span class="tm">'+fmtTime(c.date)+'</span></div><div class="t1"><span class="prev">'+esc(c.preview||'')+'</span>'+(c.unread?('<span class="unb">'+c.unread+'</span>'):'')+'</div></div></div>').join(''):'<div class="empty">Chat yo\\'q</div>';
+if(CURDLG){const el=document.getElementById('ci_'+CURDLG);if(el)el.classList.add('sel');}}
+function chatTitle(id){const c=CHATS.find(x=>String(x.id)===String(id));return c?c.title:id;}
+function selectChat(id){CURDLG=id;viewCtx.dialogId=id;document.querySelectorAll('.ci').forEach(e=>e.classList.remove('sel'));const ci=document.getElementById('ci_'+id);if(ci)ci.classList.add('sel');document.body.classList.add('showconv');
+const title=chatTitle(id);
+document.getElementById('conv').innerHTML='<div id="convhead"><button class="ghost mobback" onclick="closeConv()">&larr;</button>'+avatar(title,40)+'<b>'+esc(title)+'</b><div class="sp"></div><button class="ghost" onclick="refreshMsgs()">Yangilash</button></div><div id="convbody" class="empty">Yuklanmoqda...</div>';
+pollMsgs(0,0);}
+function closeConv(){document.body.classList.remove('showconv');}
+function vidSoon(){alert("Video ko'rish keyingi versiyada qo'shiladi.");}
+function refreshMsgs(){const b=document.getElementById('convbody');if(b)b.innerHTML='<div class="empty">Yangilanmoqda...</div>';pollMsgs(0,1);}
+function mediaHtml(m){if(!m.media)return '';const md=m.media;
+if(md.type==='photo'&&md.thumb)return '<div class="media"><img class="ph" src="data:image/jpeg;base64,'+md.thumb+'" onclick="window.open(this.src)"></div>';
+if(md.type==='video')return '<div class="media"><div class="mbtn" onclick="vidSoon()">&#9654; Video'+(md.duration?(' '+md.duration+'s'):'')+'</div></div>';
+if(md.type==='file')return '<div class="media"><div class="mbtn">&#128206; '+esc(md.name||'Fayl')+'</div></div>';
+if(md.type==='voice'||md.type==='audio')return '<div class="media"><div class="mbtn">&#127925; Ovozli'+(md.duration?(' '+md.duration+'s'):'')+'</div></div>';
+return '<div class="media"><div class="mbtn">['+esc(md.type||'media')+']</div></div>';}
+async function pollMsgs(tries,refresh){if(mode!=='chats'||!viewCtx.dialogId)return;let d;try{d=await api('/api/messages?device='+encodeURIComponent(viewCtx.devId)+'&account='+encodeURIComponent(viewCtx.accId)+'&dialog='+encodeURIComponent(viewCtx.dialogId)+(refresh?'&refresh=1':''));}catch(e){const b=document.getElementById('convbody');if(b)b.innerHTML='<div class="empty">Xato: '+esc(e.message)+'</div>';return;}
+const body=document.getElementById('convbody');if(!body||mode!=='chats')return;
+if(d.pending){body.innerHTML='<div class="empty">Qurilmadan so\\'ralmoqda... ('+(tries+1)+')</div>';if(tries<40)setTimeout(()=>pollMsgs(tries+1,0),2500);return;}
+const grp=String(viewCtx.dialogId).charAt(0)==='-';
 const ms=(d.messages||[]).slice().reverse();
-list.innerHTML='<div class="dev">'+(d.age!=null?('<div class="mut" style="margin-bottom:8px">kesh: '+Math.floor(d.age/1000)+' s oldin</div>'):'')+
-(ms.length?ms.map(m=>'<div style="margin:6px 0;padding:8px 10px;border-radius:10px;background:'+(m.out?'#1f2a4d':'#11162a')+'"><div class="row"><b style="font-size:13px;color:'+(m.out?'#9db4ff':'#7cc3ff')+'">'+esc(m.sender)+'</b><div class="sp"></div><span class="mut" style="font-size:12px">'+fmtDate(m.date)+'</span></div><div style="margin-top:3px;white-space:pre-wrap">'+esc(m.text)+'</div></div>').join(''):'<div class="empty">Xabar yo\\'q</div>')+'</div>';}
+body.className='';
+body.innerHTML=ms.length?ms.map(m=>'<div class="msg '+(m.out?'out':'in')+'">'+((!m.out&&grp)?('<div class="snd" style="color:'+avColor(m.sender)+'">'+esc(m.sender)+'</div>'):'')+mediaHtml(m)+esc(m.text)+'<span class="mt">'+fmtTime(m.date)+'</span></div><div class="clr"></div>').join(''):'<div class="empty">Xabar yo\\'q</div>';
+body.scrollTop=body.scrollHeight;}
 function render(){if(!TOKEN){loginView();return;}document.getElementById('logoutBtn').style.display='';mode='devices';load().catch(e=>{if(e.status===401){TOKEN='';localStorage.removeItem('neyroAdminToken');loginView('Sessiya tugadi, qayta kiring.');}else{main.innerHTML='<div class="empty">Serverga ulanib bo\\'lmadi: '+esc(e.message)+'</div>';}});}
 render();setInterval(()=>{if(TOKEN&&mode==='devices')load().catch(()=>{});},5000);
 </script></body></html>`;
