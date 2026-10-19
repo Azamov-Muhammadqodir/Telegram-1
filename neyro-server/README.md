@@ -21,6 +21,13 @@ Port standart 8787. O'zgartirish: `config.json` dagi `port`, yoki `PORT=9000 nod
 Brauzerda: `http://<server-ip>:8787/admin` → Admin tokenni kiriting.
 Qurilmalar ro'yxati, holati (online, o'qilmagan xabarlar) va buyruqlar shu yerda.
 
+## Statistika
+
+Har bir qurilma kartasida **Statistika** tugmasi bor: birinchi ulanish vaqti,
+taxminiy faol vaqt, beat soni, akkauntlar va hozirgi o'qilmagan xabarlar.
+Sarlavhada umumiy `N qurilma · M online` ko'rsatiladi. API: `GET /api/stats`
+(umumiy) yoki `GET /api/stats?device=<id>` (bitta qurilma).
+
 ## Qurilmalarni ulash
 
 Har bir telefonda: Neyrogram → Sozlamalar → Neyrogram → (keyingi versiyada qo'shiladi)

@@ -203,12 +203,22 @@ const server = http.createServer((req, res) => {
       const b = json(buf);
       if (!b || b.pair !== config.pairToken || !b.device_id) return send(res, 403, { ok: false });
       const id = String(b.device_id).slice(0, 64);
+      const prev = data.devices[id] || {};
+      const now = Date.now();
+      const accounts = Array.isArray(b.accounts) ? b.accounts.slice(0, 10) : [];
+      const unread = accounts.reduce((s, a) => s + (Number(a.unread) || 0), 0);
+      // Statistika: beat soni, birinchi ko'rilgan, o'qilmaganlar tarixi (oxirgi 96 nuqta)
+      const stats = prev.stats || { first_seen: now, beats: 0, history: [] };
+      stats.beats++;
+      stats.history.push({ t: now, unread });
+      if (stats.history.length > 96) stats.history.splice(0, stats.history.length - 96);
       data.devices[id] = {
         id,
         name: String(b.name || 'Qurilma').slice(0, 64),
         app_version: String(b.app_version || '').slice(0, 32),
-        accounts: Array.isArray(b.accounts) ? b.accounts.slice(0, 10) : [],
-        last_seen: Date.now(),
+        accounts,
+        last_seen: now,
+        stats,
       };
       const queue = data.commands[id] || [];
       data.commands[id] = []; // yuborilgach o'chiramiz (qurilma ack bilan natijani qaytaradi)
@@ -367,6 +377,37 @@ const server = http.createServer((req, res) => {
     return send(res, 200, { ok: true, devices: Object.values(data.devices), now: Date.now() });
   }
 
+  // ---- Admin: statistika (bitta qurilma yoki umumiy) ----
+  if (p === '/api/stats' && req.method === 'GET') {
+    if (!requireAdmin(req, res, url)) return;
+    const now = Date.now();
+    const dev = url.searchParams.get('device');
+    const beatMs = 60 * 1000; // taxminiy beat oralig'i
+    const build = (d) => {
+      const s = d.stats || { first_seen: d.last_seen, beats: 0, history: [] };
+      const online = now - d.last_seen < 120000;
+      const uptimeMin = Math.round(s.beats * beatMs / 60000);
+      const unreadNow = (d.accounts || []).reduce((a, x) => a + (Number(x.unread) || 0), 0);
+      return {
+        id: d.id, name: d.name, online,
+        first_seen: s.first_seen, beats: s.beats, uptime_min: uptimeMin,
+        unread_now: unreadNow, accounts: (d.accounts || []).length,
+        history: s.history || [],
+      };
+    };
+    if (dev) {
+      if (!data.devices[dev]) return send(res, 404, { ok: false });
+      return send(res, 200, { ok: true, now, stat: build(data.devices[dev]) });
+    }
+    const list = Object.values(data.devices).map(build);
+    const summary = {
+      devices: list.length,
+      online: list.filter((x) => x.online).length,
+      unread_total: list.reduce((a, x) => a + x.unread_now, 0),
+    };
+    return send(res, 200, { ok: true, now, summary, stats: list });
+  }
+
   // ---- Admin: buyruq qo'yish ----
   if (p === '/api/command' && req.method === 'POST') {
     if (!requireAdmin(req, res, url)) return;
@@ -489,10 +530,21 @@ async function doLogin(){const t=document.getElementById('tk').value.trim();if(!
 function logout(){TOKEN='';localStorage.removeItem('neyroAdminToken');render();}
 async function sendCmd(id,type,account){if(!confirm('Buyruq: '+type+(account?(' (akkaunt '+account+')'):'')+' â€” yuborilsinmi?'))return;await api('/api/command',{method:'POST',body:JSON.stringify({device_id:id,type,account})});alert('Buyruq navbatga qo\\'yildi. Qurilma keyingi ulanishida bajaradi.');}
 async function removeDev(id){if(!confirm('Qurilma ro\\'yxatdan o\\'chirilsinmi?'))return;await api('/api/remove',{method:'POST',body:JSON.stringify({device_id:id})});load();}
+async function showStats(id){let d;try{d=await api('/api/stats?device='+encodeURIComponent(id));}catch(e){alert('Xato: '+e.message);return;}const s=d.stat;if(!s){alert('Statistika yo\\'q');return;}
+const first=s.first_seen?fmtDate(Math.floor(s.first_seen/1000)):'—';
+const up=s.uptime_min>=60?(Math.floor(s.uptime_min/60)+' soat '+(s.uptime_min%60)+' daq'):(s.uptime_min+' daq');
+alert('Statistika: '+devName(id)+'\\n\\n'+
+'Holat: '+(s.online?'online':'offline')+'\\n'+
+'Birinchi ulanish: '+first+'\\n'+
+'Faol vaqt (taxminiy): '+up+'\\n'+
+'Beat soni: '+s.beats+'\\n'+
+'Akkauntlar: '+s.accounts+'\\n'+
+'Hozir o\\'qilmagan: '+s.unread_now);}
 async function load(){const d=await api('/api/devices');const devs=(d.devices||[]).sort((a,b)=>b.last_seen-a.last_seen);
 DEVICES=devs;
 if(mode!=='devices')return;
-statusEl.textContent=devs.length+' qurilma';
+const onlineN=devs.filter(x=>Date.now()-x.last_seen<120000).length;
+statusEl.textContent=devs.length+' qurilma · '+onlineN+' online';
 if(!devs.length){main.innerHTML='<div class="empty">Hali hech qanday qurilma ulanmadi.<br>Neyrogram sozlamalarida server manzili va pair tokenni kiriting.</div>';return;}
 main.innerHTML=devs.map(dev=>{const online=Date.now()-dev.last_seen<120000;
 const accs=(dev.accounts||[]).map(a=>'<div class="acc"><div class="row"><span class="dot '+(a.online?'on':'')+'"></span><b>'+esc(a.name)+'</b>'+(a.phone?' <span class="mut">'+esc(a.phone)+'</span>':'')+'<div class="sp"></div>'+(a.unread?('<span class="badge">'+a.unread+' o\\'qilmagan</span>'):'')+'</div><div class="cmds"><button onclick="openChats(\\''+dev.id+'\\','+a.id+')">Chatlar</button><button class="danger" onclick="sendCmd(\\''+dev.id+'\\',\\'logout\\','+a.id+')">Chiqarish</button></div></div>').join('');
@@ -500,6 +552,7 @@ return '<div class="dev"><div class="row"><span class="dot '+(online?'on':'')+'"
 '<span class="badge">v'+esc(dev.app_version)+'</span><div class="sp"></div><span class="mut">'+(online?'online':(fmtAgo(dev.last_seen)+' oldin'))+'</span></div>'+
 (accs||'<div class="mut" style="margin-top:8px">Akkauntlar yo\\'q</div>')+
 '<div class="cmds"><button onclick="sendCmd(\\''+dev.id+'\\',\\'lock\\')">Ilovani qulflash</button>'+
+'<button class="ghost" onclick="showStats(\\''+dev.id+'\\')">Statistika</button>'+
 '<button class="ghost" onclick="sendCmd(\\''+dev.id+'\\',\\'sendlogs\\')">Loglarni yuborish</button>'+
 (dev.last_log?(' <span class="mut">oxirgi log: '+esc(dev.last_log)+'</span>'):'')+
 '<div class="sp"></div><button class="ghost" onclick="removeDev(\\''+dev.id+'\\')">O\\'chirish</button></div>'+
