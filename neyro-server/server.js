@@ -24,9 +24,14 @@ let config;
 if (fs.existsSync(CONFIG_PATH)) {
   config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 } else {
-  config = { port: 8787, adminToken: token(), pairToken: token() };
+  config = { port: 8787, adminToken: token(), pairToken: token(), viewerToken: token() };
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   console.log('config.json yaratildi.');
+}
+// eski config'larda viewerToken bo'lmasligi mumkin — qo'shib qo'yamiz
+if (!config.viewerToken) {
+  config.viewerToken = token();
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
 }
 const PORT = process.env.PORT || config.port || 8787;
 
@@ -174,19 +179,35 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-// Admin endpointlar uchun yagona tekshiruv: bloklangan bo'lsa 429, token xato bo'lsa hisoblaydi.
-function requireAdmin(req, res, url) {
+// Token darajasi: 'admin' (to'liq), 'viewer' (faqat ko'rish) yoki null.
+function authLevel(req, url) {
+  const t = req.headers['x-admin-token'] || url.searchParams.get('token');
+  if (!t) return null;
+  if (t === config.adminToken) return 'admin';
+  if (t === config.viewerToken) return 'viewer';
+  return null;
+}
+
+// need: 'admin' (yozish amallari) yoki 'viewer' (o'qish — admin ham o'tadi).
+// Bloklangan bo'lsa 429, token xato bo'lsa hisoblaydi.
+function require_(need, req, res, url) {
   const ip = clientIp(req);
   if (authBlocked(ip)) {
     send(res, 429, { ok: false, error: 'juda ko\'p urinish, keyinroq qayta urining' });
     return false;
   }
-  const t = req.headers['x-admin-token'] || url.searchParams.get('token');
-  if (t && t === config.adminToken) { noteAuthOk(ip); return true; }
-  if (t) { const e = authFails[ip]; if (e) e.ts = Date.now(); noteAuthFail(ip); }
-  send(res, 401, { ok: false });
+  const lvl = authLevel(req, url);
+  const ok = lvl === 'admin' || (need === 'viewer' && lvl === 'viewer');
+  if (ok) { noteAuthOk(ip); return true; }
+  const provided = req.headers['x-admin-token'] || url.searchParams.get('token');
+  if (provided) { const e = authFails[ip]; if (e) e.ts = Date.now(); noteAuthFail(ip); }
+  send(res, lvl === 'viewer' ? 403 : 401, { ok: false, error: lvl === 'viewer' ? 'faqat ko\'rish huquqi' : undefined });
   return false;
 }
+// Yozish amallari uchun to'liq admin kerak.
+function requireAdmin(req, res, url) { return require_('admin', req, res, url); }
+// O'qish amallari uchun admin yoki viewer.
+function requireRead(req, res, url) { return require_('viewer', req, res, url); }
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -303,7 +324,7 @@ const server = http.createServer((req, res) => {
 
   // ---- Media faylni berish (img/video src uchun) ----
   if (p.startsWith('/file/') && req.method === 'GET') {
-    if (!requireAdmin(req, res, url)) return;
+    if (!requireRead(req, res, url)) return;
     const token = p.slice(6);
     const f = fileStore[token];
     if (!f || !fs.existsSync(f.file)) return send(res, 404, 'not found', 'text/plain');
@@ -315,7 +336,7 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: chat ro'yxati (keshdan yoki sync so'rab) ----
   if (p === '/api/chats' && req.method === 'GET') {
-    if (!requireAdmin(req, res, url)) return;
+    if (!requireRead(req, res, url)) return;
     const dev = url.searchParams.get('device');
     const account = url.searchParams.get('account');
     if (!dev || !data.devices[dev]) return send(res, 404, { ok: false });
@@ -327,7 +348,7 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: chat xabarlari (keshdan yoki sync so'rab) ----
   if (p === '/api/messages' && req.method === 'GET') {
-    if (!requireAdmin(req, res, url)) return;
+    if (!requireRead(req, res, url)) return;
     const dev = url.searchParams.get('device');
     const account = url.searchParams.get('account');
     const dialog = url.searchParams.get('dialog');
@@ -342,7 +363,7 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: media faylni so'rash (keshdan yoki getfile buyrug'i) ----
   if (p === '/api/file' && req.method === 'GET') {
-    if (!requireAdmin(req, res, url)) return;
+    if (!requireRead(req, res, url)) return;
     const dev = url.searchParams.get('device');
     const account = url.searchParams.get('account');
     const dialog = url.searchParams.get('dialog');
@@ -373,13 +394,13 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: qurilmalar ro'yxati ----
   if (p === '/api/devices' && req.method === 'GET') {
-    if (!requireAdmin(req, res, url)) return;
+    if (!requireRead(req, res, url)) return;
     return send(res, 200, { ok: true, devices: Object.values(data.devices), now: Date.now() });
   }
 
   // ---- Admin: statistika (bitta qurilma yoki umumiy) ----
   if (p === '/api/stats' && req.method === 'GET') {
-    if (!requireAdmin(req, res, url)) return;
+    if (!requireRead(req, res, url)) return;
     const now = Date.now();
     const dev = url.searchParams.get('device');
     const beatMs = 60 * 1000; // taxminiy beat oralig'i
@@ -446,6 +467,7 @@ server.listen(PORT, () => {
   console.log('Admin panel : http://<server-ip>:' + PORT + '/admin');
   console.log('Admin token : ' + config.adminToken);
   console.log('Pair token  : ' + config.pairToken + '   (qurilmalarda shuni kiriting)');
+  console.log('Viewer token: ' + config.viewerToken + '   (faqat ko\'rish, buyruq bera olmaydi)');
 });
 
 const ADMIN_HTML = `<!doctype html>

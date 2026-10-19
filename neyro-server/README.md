@@ -21,6 +21,13 @@ Port standart 8787. O'zgartirish: `config.json` dagi `port`, yoki `PORT=9000 nod
 Brauzerda: `http://<server-ip>:8787/admin` → Admin tokenni kiriting.
 Qurilmalar ro'yxati, holati (online, o'qilmagan xabarlar) va buyruqlar shu yerda.
 
+## Rollar (admin / viewer)
+
+Server ikki token beradi: **Admin token** (to'liq — buyruq berish, o'chirish) va
+**Viewer token** (faqat ko'rish — qurilmalar, statistika va chatlarni ko'radi,
+lekin buyruq bera olmaydi). Panelga qaysi tokenni kiritsangiz, shu huquq beriladi.
+Yozish amallariga viewer tokeni bilan urinish 403 qaytaradi.
+
 ## Statistika
 
 Har bir qurilma kartasida **Statistika** tugmasi bor: birinchi ulanish vaqti,
