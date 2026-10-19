@@ -142,6 +142,12 @@ android {
 
         multiDexEnabled true
 
+        if (project.hasProperty('neyroAbis')) {
+            ndk {
+                abiFilters(*project.property('neyroAbis').toString().split(','))
+            }
+        }
+
         externalNativeBuild {
             cmake {
                 version '3.22.1'

@@ -131,7 +131,8 @@ android {
         }
         afat {
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+                // Neyrogram: -PneyroAbis=arm64-v8a bilan faqat kerakli ABI'larni build qilish mumkin
+                abiFilters(*(project.hasProperty('neyroAbis') ? project.property('neyroAbis').toString().split(',') : ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]))
             }
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
