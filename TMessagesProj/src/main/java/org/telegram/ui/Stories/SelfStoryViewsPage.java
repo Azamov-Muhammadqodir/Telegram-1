@@ -1348,9 +1348,15 @@ public class SelfStoryViewsPage extends FrameLayout implements NotificationCente
                             // Neyrogram: ko'ruvchilarni qurilmada saqlaymiz; server bo'sh ro'yxat qaytarsa, saqlanganini ko'rsatamiz
                             final uz.neyroaza.gram.NeyroStoryViewers viewersCache = uz.neyroaza.gram.NeyroStoryViewers.getInstance(currentAccount);
                             viewersCache.save(dialogId, storyItem.id, res.views);
-                            if (res.views.isEmpty() && initial && TextUtils.isEmpty(req.q) && !req.just_contacts) {
-                                res.views.addAll(viewersCache.get(dialogId, storyItem.id));
-                                res.next_offset = null;
+                            // muddati o'tgan storyda server Premium'siz faqat reaksiya bosganlarni beradi
+                            boolean onlyReactorsFromServer = StoriesUtilities.hasExpiredViews(storyItem) && !UserConfig.getInstance(currentAccount).isPremium();
+                            if (initial && TextUtils.isEmpty(req.q) && !req.just_contacts && (res.views.isEmpty() || onlyReactorsFromServer)) {
+                                ArrayList<TL_stories.StoryView> cached = viewersCache.get(dialogId, storyItem.id);
+                                if (cached.size() > res.views.size()) {
+                                    res.views.clear();
+                                    res.views.addAll(cached);
+                                    res.next_offset = null;
+                                }
                             }
                         }
                         MessagesController.getInstance(currentAccount).getStoriesController().applyStoryViewsBlocked(res);

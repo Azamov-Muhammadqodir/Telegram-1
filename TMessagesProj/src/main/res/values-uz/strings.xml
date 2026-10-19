@@ -68,7 +68,7 @@
     <string name="NeyroUnhideStoriesConfirm">Bu odamning storylari yana ko\'rsatiladi.</string>
     <string name="NeyroShowStories">Storylarni ko\'rsatish</string>
     <string name="NeyroStoryViewersAlways">Story ko\'ruvchilarning to\'liq ro\'yxati</string>
-    <string name="NeyroStoryViewersAlwaysInfo">Story muddati tugagandan keyin ham kim ko\'rganini ko\'rish</string>
+    <string name="NeyroStoryViewersAlwaysInfo">Story va postlarni like bosmaganlar bilan birga ko\'rgan hammani ko\'rish</string>
     <string name="NeyroFeaturesGuide">Funksiyalar qo\'llanmasi</string>
     <string name="NeyroFeaturesGuideInfo">Har bir funksiya nima qiladi</string>
     <string name="NeyroGuideIntro">Neyrogram Telegram\'ga qo\'shgan hamma narsa: har bir funksiya nima qiladi va qayerda joylashgan. Ko\'pchiligini Sozlamalar → Neyrogram bo\'limida yoqish yoki o\'chirish mumkin.</string>
@@ -90,7 +90,7 @@
     <string name="NeyroGuideWhereHiddenChats">Chatni oching → ⋮ → Chatni yashirish. Ochish: Sozlamalar → Neyrogram → Yashirin chatlar</string>
     <string name="NeyroGuideHiddenStories">Odamning storylarini butunlay yashiradi: storylar qatoridan, arxivdagi storylardan va avatari atrofidagi halqadan. Faqat shu qurilmada, odamga bu haqda xabar bormaydi.</string>
     <string name="NeyroGuideWhereHiddenStories">Storylar qatorida avatarni uzoq bosing → Storylarni butunlay yashirish. Qaytarish: Sozlamalar → Neyrogram → Yashirilgan storylar</string>
-    <string name="NeyroGuideStoryViewers">Storylaringiz muddati tugagandan keyin ham ularni kim ko\'rganini ko\'rsatadi. Ro\'yxat qurilmada ham saqlanadi, shuning uchun Telegram uni bermay qo\'yganda ham ko\'rinib turadi.</string>
+    <string name="NeyroGuideStoryViewers">Storylaringiz va profildagi postlaringizni like bosmaganlar bilan birga ko\'rgan hammani ko\'rsatadi. Story faol paytida Neyrogram har 30 daqiqada ko\'ruvchilarni orqa fonda saqlab boradi, shuning uchun Telegram ro\'yxatni bermay qo\'yganda ham to\'liq ro\'yxat ko\'rinib turadi. Bu funksiya o\'rnatilgandan keyin joylangan storylar uchun ishlaydi, ilovani vaqti-vaqti bilan ochib turish kerak.</string>
     <string name="NeyroGuideWhereStoryViewers">O\'z storyingizni oching → pastdagi ko\'rishlar. Yoqish/o\'chirish: Sozlamalar → Neyrogram → Storylar</string>
     <string name="NeyroGuideFastDownload">Fayllarni kattaroq bo\'laklarda va parallel yuklaydi. Premium\'siz akkauntlar uchun Telegram baribir o\'z serverlarida tezlikni cheklashi mumkin.</string>
     <string name="NeyroGuideWhereMedia">Sozlamalar → Neyrogram → Media</string>

@@ -108,18 +108,117 @@ public class NeyroStoryViewers {
         return result;
     }
 
+    // ---- Orqa fonda sinxronlash ----
+    // Server Premium'siz foydalanuvchiga story tugaganidan 24 soat o'tgach faqat reaksiya bosganlarni beradi.
+    // Shuning uchun o'z storylarimiz ko'ruvchilarini shu muddat ichida o'zimiz yuklab, saqlab boramiz.
+
+    private static final long SYNC_INTERVAL_MS = 30 * 60 * 1000L;
+    private static final int VIEWS_WINDOW_SEC = 86400;
+
+    private long lastSyncTime;
+    private final java.util.HashSet<Integer> syncing = new java.util.HashSet<>();
+
+    /** MessagesController.updateTimerProc'dan tez-tez chaqiriladi; ish faqat har 30 daqiqada bajariladi. */
+    public void maybeSync() {
+        if (!NeyroConfig.storyViewersAlways) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - lastSyncTime < SYNC_INTERVAL_MS) {
+            return;
+        }
+        lastSyncTime = now;
+        org.telegram.messenger.AndroidUtilities.runOnUIThread(this::syncNow);
+    }
+
+    private void syncNow() {
+        UserConfig userConfig = UserConfig.getInstance(account);
+        if (!userConfig.isClientActivated() || userConfig.isPremium()) {
+            return;
+        }
+        long selfId = userConfig.getClientUserId();
+        int now = org.telegram.tgnet.ConnectionsManager.getInstance(account).getCurrentTime();
+        TL_stories.PeerStories peerStories = MessagesController.getInstance(account).getStoriesController().getStories(selfId);
+        if (peerStories != null) {
+            for (TL_stories.StoryItem story : peerStories.stories) {
+                if (story != null && story.id > 0 && !(story instanceof TL_stories.TL_storyItemDeleted)) {
+                    track(selfId, story.id, story.expire_date);
+                }
+            }
+        }
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.delete("tracked", "expire_date + ? < ?", new String[]{String.valueOf(VIEWS_WINDOW_SEC), String.valueOf(now)});
+        try (Cursor c = db.rawQuery("SELECT dialog_id, story_id FROM tracked", null)) {
+            while (c.moveToNext()) {
+                syncStory(c.getLong(0), c.getInt(1), "");
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    private void track(long dialogId, int storyId, int expireDate) {
+        ContentValues values = new ContentValues();
+        values.put("dialog_id", dialogId);
+        values.put("story_id", storyId);
+        values.put("expire_date", expireDate);
+        helper.getWritableDatabase().insertWithOnConflict("tracked", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    private void syncStory(long dialogId, int storyId, String offset) {
+        if (offset.isEmpty()) {
+            if (syncing.contains(storyId)) {
+                return;
+            }
+            syncing.add(storyId);
+        }
+        MessagesController controller = MessagesController.getInstance(account);
+        TL_stories.TL_stories_getStoryViewsList req = new TL_stories.TL_stories_getStoryViewsList();
+        req.peer = controller.getInputPeer(dialogId);
+        req.id = storyId;
+        req.q = "";
+        req.just_contacts = false;
+        req.reactions_first = false;
+        req.limit = 100;
+        req.offset = offset;
+        org.telegram.tgnet.ConnectionsManager.getInstance(account).sendRequest(req, (response, error) -> org.telegram.messenger.AndroidUtilities.runOnUIThread(() -> {
+            boolean more = false;
+            if (response instanceof TL_stories.StoryViewsList) {
+                TL_stories.StoryViewsList res = (TL_stories.StoryViewsList) response;
+                controller.putUsers(res.users, false);
+                MessagesStorage.getInstance(account).putUsersAndChats(res.users, res.chats, true, true);
+                save(dialogId, storyId, res.views);
+                more = !res.views.isEmpty() && res.next_offset != null && !res.next_offset.isEmpty();
+                if (more) {
+                    syncStory(dialogId, storyId, res.next_offset);
+                }
+            }
+            if (!more) {
+                syncing.remove(storyId);
+            }
+        }));
+    }
+
     private static class Helper extends SQLiteOpenHelper {
         Helper(int account) {
-            super(ApplicationLoader.applicationContext, "neyro_story_viewers_" + account + ".db", null, 1);
+            super(ApplicationLoader.applicationContext, "neyro_story_viewers_" + account + ".db", null, 2);
         }
 
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE viewers(dialog_id INTEGER, story_id INTEGER, user_id INTEGER, date INTEGER, data BLOB, PRIMARY KEY(dialog_id, story_id, user_id))");
+            createTracked(db);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            if (oldVersion < 2) {
+                createTracked(db);
+            }
+        }
+
+        private static void createTracked(SQLiteDatabase db) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS tracked(dialog_id INTEGER, story_id INTEGER, expire_date INTEGER, PRIMARY KEY(dialog_id, story_id))");
         }
     }
 }

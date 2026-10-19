@@ -11599,7 +11599,7 @@
     <string name="NeyroUnhideStoriesConfirm">This person\'s stories will be shown again.</string>
     <string name="NeyroShowStories">Show stories</string>
     <string name="NeyroStoryViewersAlways">Full story viewers list</string>
-    <string name="NeyroStoryViewersAlwaysInfo">See who viewed your stories even after they expire</string>
+    <string name="NeyroStoryViewersAlwaysInfo">See everyone who viewed your stories and posts, not only those who reacted</string>
     <string name="NeyroFeaturesGuide">Features guide</string>
     <string name="NeyroFeaturesGuideInfo">What each feature does</string>
     <string name="NeyroGuideIntro">Everything Neyrogram adds on top of Telegram: what each feature does and where to find it. Most of them can be turned on or off in Settings → Neyrogram.</string>
@@ -11621,7 +11621,7 @@
     <string name="NeyroGuideWhereHiddenChats">Open a chat → ⋮ → Hide chat. To open them: Settings → Neyrogram → Hidden chats</string>
     <string name="NeyroGuideHiddenStories">Completely hides a person\'s stories: from the stories bar, from archived stories and from the ring around their avatar. Only on this device — the person is not notified.</string>
     <string name="NeyroGuideWhereHiddenStories">Long-press their avatar in the stories bar → Hide stories forever. To restore: Settings → Neyrogram → Hidden stories</string>
-    <string name="NeyroGuideStoryViewers">Shows who viewed your stories even after they expire. Viewers are also saved on this device, so the list stays available after Telegram stops providing it.</string>
+    <string name="NeyroGuideStoryViewers">Shows everyone who viewed your stories and profile posts, not only those who reacted. While a story is active, Neyrogram saves its viewers in the background every 30 minutes, so the full list stays available after Telegram stops providing it. Works for stories posted after this feature was installed, and the app needs to be opened from time to time.</string>
     <string name="NeyroGuideWhereStoryViewers">Open your story → views at the bottom. On/off: Settings → Neyrogram → Stories</string>
     <string name="NeyroGuideFastDownload">Downloads files in bigger parallel chunks. Telegram may still limit download speed on its servers for accounts without Premium.</string>
     <string name="NeyroGuideWhereMedia">Settings → Neyrogram → Media</string>

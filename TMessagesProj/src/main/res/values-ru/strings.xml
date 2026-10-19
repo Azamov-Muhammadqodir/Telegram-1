@@ -327,7 +327,7 @@
     <string name="NeyroUnhideStoriesConfirm">Истории этого человека снова будут показываться.</string>
     <string name="NeyroShowStories">Показать истории</string>
     <string name="NeyroStoryViewersAlways">Полный список просмотров историй</string>
-    <string name="NeyroStoryViewersAlwaysInfo">Видеть, кто смотрел ваши истории, даже после их окончания</string>
+    <string name="NeyroStoryViewersAlwaysInfo">Видеть всех, кто смотрел ваши истории и посты, а не только реакции</string>
     <string name="NeyroFeaturesGuide">Руководство по функциям</string>
     <string name="NeyroFeaturesGuideInfo">Что делает каждая функция</string>
     <string name="NeyroGuideIntro">Всё, что Neyrogram добавляет к Telegram: что делает каждая функция и где её найти. Большинство функций включаются и выключаются в Настройки → Neyrogram.</string>
@@ -349,7 +349,7 @@
     <string name="NeyroGuideWhereHiddenChats">Откройте чат → ⋮ → Скрыть чат. Открыть: Настройки → Neyrogram → Скрытые чаты</string>
     <string name="NeyroGuideHiddenStories">Полностью скрывает истории человека: из ленты, из архива историй и кольцо вокруг аватара. Только на этом устройстве — человек об этом не узнает.</string>
     <string name="NeyroGuideWhereHiddenStories">Удерживайте аватар в ленте историй → Скрыть истории навсегда. Вернуть: Настройки → Neyrogram → Скрытые истории</string>
-    <string name="NeyroGuideStoryViewers">Показывает, кто смотрел ваши истории, даже после их окончания. Список также сохраняется на устройстве и остаётся доступным, когда Telegram перестаёт его отдавать.</string>
+    <string name="NeyroGuideStoryViewers">Показывает всех, кто смотрел ваши истории и посты в профиле, а не только поставивших реакцию. Пока история активна, Neyrogram каждые 30 минут сохраняет зрителей в фоне, поэтому полный список остаётся доступным, когда Telegram перестаёт его отдавать. Работает для историй, опубликованных после установки этой функции; приложение нужно время от времени открывать.</string>
     <string name="NeyroGuideWhereStoryViewers">Откройте свою историю → просмотры внизу. Вкл/выкл: Настройки → Neyrogram → Истории</string>
     <string name="NeyroGuideFastDownload">Загружает файлы крупными частями параллельно. Telegram всё равно может ограничивать скорость на своих серверах для аккаунтов без Premium.</string>
     <string name="NeyroGuideWhereMedia">Настройки → Neyrogram → Медиа</string>
