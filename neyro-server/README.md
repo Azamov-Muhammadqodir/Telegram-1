@@ -31,6 +31,10 @@ Har bir telefonda: Neyrogram → Sozlamalar → Neyrogram → (keyingi versiyada
 
 ## Xavfsizlik
 
+- Admin token uchun **brute-force himoya** bor: bitta IP 10 marta xato token
+  kiritsa, 15 daqiqaga bloklanadi.
+- Umumiy **rate-limit**: har IP daqiqasiga 1200 so'rov (polling uchun keng, lekin
+  suiiste'molni to'xtatadi).
 - `config.json` va `data.json` ni maxfiy saqlang (tokenlar bor).
 - Serverni HTTPS orqasida (nginx reverse proxy) ishlatish tavsiya etiladi.
 - "Loglarni yuborish" buyrug'i log fayllarini serverga yuklaydi — ularda

