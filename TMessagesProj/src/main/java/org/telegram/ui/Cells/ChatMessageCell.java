@@ -18489,6 +18489,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (currentMessageObject.messageOwner.video_processing_pending) {
             timeString = formatString(R.string.ScheduledTimeApprox, timeString);
         }
+        if (uz.neyroaza.gram.NeyroConfig.saveDeletedMessages && !TextUtils.isEmpty(timeString) && uz.neyroaza.gram.NeyroDeletedMessages.getInstance(currentAccount).isDeleted(currentMessageObject)) {
+            timeString = getString(R.string.NeyroDeletedMark) + " " + timeString;
+        }
         if (signString != null) {
             if (messageObject.messageOwner.via_business_bot_id != 0) {
                 currentTimeString = timeString + ", ";

@@ -461,6 +461,7 @@ public class ChatActivity extends BaseFragment implements
     private RadialProgressView progressBar;
     private ActionBarMenuItem.Item addContactItem;
     private ActionBarMenuItem.Item clearHistoryItem;
+    private ActionBarMenuItem.Item neyroHideChatItem;
     private ActionBarMenuItem.Item viewAsTopics;
     private ActionBarMenuItem.Item closeTopicItem;
     private ActionBarMenuItem.Item openForumItem;
@@ -1263,6 +1264,9 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_WELCOME_REVERT = 116;
     public final static int OPTION_SEND_MONEY = 117;
 
+    public final static int OPTION_NEYRO_EDIT_HISTORY = 900;
+    public final static int OPTION_NEYRO_SAVE_STICKER = 901;
+
     private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
             NotificationCenter.messagesRead,
             NotificationCenter.threadMessagesRead,
@@ -1647,6 +1651,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int chat_menu_options = -2;
     private final static int chat_menu_edit_text_options = -3;
     private final static int clear_history = 15;
+    private final static int neyro_hide_chat = 950;
     private final static int delete_chat = 16;
     private final static int share_contact = 17;
     private final static int mute = 18;
@@ -2972,6 +2977,7 @@ public class ChatActivity extends BaseFragment implements
             .add(NotificationCenter.didLoadSendAsPeers)
             .add(NotificationCenter.closeChatActivity)
             .add(NotificationCenter.messagesDeleted)
+            .add(NotificationCenter.neyroMessagesMarkedDeleted)
             .add(NotificationCenter.historyCleared)
             .add(NotificationCenter.messageReceivedByServer)
             .add(NotificationCenter.messageReceivedByAck)
@@ -3868,6 +3874,16 @@ public class ChatActivity extends BaseFragment implements
                         return;
                     }
                     showDialog(AlertsCreator.createTTLAlert(getParentActivity(), currentEncryptedChat, themeDelegate).create());
+                } else if (id == neyro_hide_chat) {
+                    final uz.neyroaza.gram.NeyroHiddenChats hiddenChats = uz.neyroaza.gram.NeyroHiddenChats.getInstance(currentAccount);
+                    final boolean hide = !hiddenChats.isHidden(dialog_id);
+                    uz.neyroaza.gram.NeyroHiddenChats.requestPin(ChatActivity.this, () -> {
+                        hiddenChats.setHidden(dialog_id, hide);
+                        if (neyroHideChatItem != null) {
+                            neyroHideChatItem.setText(LocaleController.getString(hide ? R.string.NeyroUnhideChat : R.string.NeyroHideChat));
+                        }
+                        BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.contact_check, LocaleController.getString(hide ? R.string.NeyroChatHidden : R.string.NeyroChatUnhidden)).show();
+                    });
                 } else if (id == clear_history || id == delete_chat || id == auto_delete_timer) {
                     if (getParentActivity() == null) {
                         return;
@@ -4487,6 +4503,10 @@ public class ChatActivity extends BaseFragment implements
             }
             if (currentUser != null && currentUser.self && getDialogId() != UserObject.VERIFY) {
                 headerItem.lazilyAddSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString(R.string.AddShortcut));
+            }
+            if (!isTopic && chatMode == 0) {
+                neyroHideChatItem = headerItem.lazilyAddSubItem(neyro_hide_chat, R.drawable.msg_archive_hide,
+                    LocaleController.getString(uz.neyroaza.gram.NeyroHiddenChats.getInstance(currentAccount).isHidden(dialog_id) ? R.string.NeyroUnhideChat : R.string.NeyroHideChat));
             }
             if (!isTopic && !ChatObject.isMonoForum(currentChat)) {
                 clearHistoryItem = headerItem.lazilyAddSubItem(clear_history, R.drawable.msg_clear,
@@ -22378,6 +22398,23 @@ public class ChatActivity extends BaseFragment implements
             if (updated && chatAdapter != null) {
                 chatAdapter.notifyDataSetChanged(false);
             }
+        } else if (id == NotificationCenter.neyroMessagesMarkedDeleted) {
+            long dialogKey = (Long) args[0];
+            ArrayList<Integer> neyroIds = (ArrayList<Integer>) args[1];
+            boolean isChannelChat = ChatObject.isChannel(currentChat);
+            if (chatListView == null || (dialogKey != 0 ? dialogKey != dialog_id : isChannelChat)) {
+                return;
+            }
+            for (int i = 0; i < chatListView.getChildCount(); i++) {
+                View child = chatListView.getChildAt(i);
+                if (child instanceof ChatMessageCell) {
+                    ChatMessageCell cell = (ChatMessageCell) child;
+                    MessageObject cellMessage = cell.getMessageObject();
+                    if (cellMessage != null && neyroIds.contains(cellMessage.getId())) {
+                        cell.forceResetMessageObject();
+                    }
+                }
+            }
         } else if (id == NotificationCenter.messagesDeleted) {
             boolean scheduled = (Boolean) args[2];
             if (scheduled != (chatMode == MODE_SCHEDULED)) {
@@ -33484,6 +33521,14 @@ public class ChatActivity extends BaseFragment implements
                 DialogsActivity fragment = new DialogsActivity(args);
                 fragment.setDelegate(this);
                 presentFragment(fragment);
+                break;
+            }
+            case OPTION_NEYRO_EDIT_HISTORY: {
+                uz.neyroaza.gram.NeyroChatHelper.showEditHistory(this, selectedObject);
+                break;
+            }
+            case OPTION_NEYRO_SAVE_STICKER: {
+                uz.neyroaza.gram.NeyroChatHelper.saveSticker(this, selectedObject);
                 break;
             }
             case OPTION_COPY: {
@@ -46287,6 +46332,11 @@ public class ChatActivity extends BaseFragment implements
                         items.add(LocaleController.getString(R.string.AddToStickers));
                         options.add(OPTION_ADD_TO_STICKERS_OR_MASKS);
                         icons.add(R.drawable.msg_sticker);
+                        if (uz.neyroaza.gram.NeyroChatHelper.canSaveSticker(selectedObject)) {
+                            items.add(LocaleController.getString(R.string.NeyroSaveSticker));
+                            options.add(OPTION_NEYRO_SAVE_STICKER);
+                            icons.add(R.drawable.msg_gallery);
+                        }
                         TLRPC.Document document = selectedObject.getDocument();
                         if (!getMediaDataController().isStickerInFavorites(document)) {
                             if (getMediaDataController().canAddStickerToFavorites()) {
@@ -46376,6 +46426,11 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(R.string.Edit));
                     options.add(OPTION_EDIT);
                     icons.add(R.drawable.msg_edit);
+                }
+                if (uz.neyroaza.gram.NeyroEditHistory.getInstance(currentAccount).hasHistory(selectedObject)) {
+                    items.add(LocaleController.getString(R.string.NeyroEditHistory));
+                    options.add(OPTION_NEYRO_EDIT_HISTORY);
+                    icons.add(R.drawable.msg_recent);
                 }
                 if (ChatObject.isMonoForum(currentChat) && selectedObject.getGroupId() == 0 && selectedObjectGroup == null && message != null && message.messageOwner != null && message.messageOwner.suggested_post == null && message.messageOwner.action == null) {
                     items.add(LocaleController.getString(R.string.EditOfferAdd));

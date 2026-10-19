@@ -299,7 +299,7 @@ public class FileLoadOperation {
     }
 
     private void updateParams() {
-        if ((preloadPrefixSize > 0 || MessagesController.getInstance(currentAccount).getfileExperimentalParams) && !forceSmallChunk) {
+        if ((preloadPrefixSize > 0 || MessagesController.getInstance(currentAccount).getfileExperimentalParams || uz.neyroaza.gram.NeyroConfig.fastDownload) && !forceSmallChunk) {
             downloadChunkSizeBig = 1024 * 512;
             maxDownloadRequests = 8;
             maxDownloadRequestsBig = 8;
@@ -867,7 +867,7 @@ public class FileLoadOperation {
                         totalBytesCount > 0 && key == null && !encryptFile && !isAudioDocument && stream == null &&
                         !isPreloadVideoOperation && !supportsPreloading && preloadPrefixSize == 0;
                 if (useDownloadByteBudget) {
-                    boolean premium = UserConfig.getInstance(currentAccount).isPremium();
+                    boolean premium = UserConfig.getInstance(currentAccount).isPremium() || uz.neyroaza.gram.NeyroConfig.fastDownload;
                     downloadConnectionsCount = premium ? ConnectionsManager.DownloadConnectionsCount : 2;
                     int byteBudget = (premium ? 16 : 2) * 1024 * 1024;
                     currentMaxDownloadRequests = byteBudget / currentDownloadChunkSize;
