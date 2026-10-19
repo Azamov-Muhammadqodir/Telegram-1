@@ -41,6 +41,7 @@ public class NeyroSettingsActivity extends UniversalFragment {
     private static final int ID_EMOJI_STATUS = 80;
     private static final int ID_SHARE_EMOJI_STATUS = 81;
     private static final int ID_APP_ICON = 82;
+    private static final int ID_REMOTE = 90;
 
     @Override
     protected CharSequence getTitle() {
@@ -93,6 +94,10 @@ public class NeyroSettingsActivity extends UniversalFragment {
         }
         items.add(UItem.asButton(ID_TRANSLATE, R.drawable.msg_translate, getString(R.string.NeyroTranslateSettings)));
         items.add(UItem.asShadow(null));
+
+        items.add(UItem.asHeader(getString(R.string.NeyroRemoteHeader)));
+        items.add(UItem.asButton(ID_REMOTE, R.drawable.msg2_devices, getString(R.string.NeyroRemote), NeyroConfig.adminEnabled ? getString(R.string.NeyroRemoteOn) : getString(R.string.NeyroRemoteOff)));
+        items.add(UItem.asShadow(getString(R.string.NeyroRemoteShortInfo)));
 
         items.add(UItem.asHeader(getString(R.string.NeyroDataHeader)));
         items.add(UItem.asButton(ID_CLEAR_DELETED, R.drawable.msg_delete, getString(R.string.NeyroClearDeleted)));
@@ -152,6 +157,9 @@ public class NeyroSettingsActivity extends UniversalFragment {
                 NeyroConfig.putBoolean("shareEmojiStatus", NeyroConfig.shareEmojiStatus = !NeyroConfig.shareEmojiStatus);
                 NeyroEmojiStatus.getInstance(currentAccount).syncBio();
                 break;
+            case ID_REMOTE:
+                presentFragment(new NeyroRemoteActivity());
+                return;
             case ID_APP_ICON:
                 presentFragment(new org.telegram.ui.ThemeActivity(org.telegram.ui.ThemeActivity.THEME_TYPE_BASIC));
                 return;

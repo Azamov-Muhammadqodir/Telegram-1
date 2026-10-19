@@ -379,4 +379,18 @@
     <string name="NeyroGuideWhereShareEmojiStatus">Настройки → Neyrogram → Эмодзи-статус</string>
     <string name="NeyroGuideAppIcon">Шесть вариантов иконки Neyrogram для рабочего стола, все бесплатно: Стандартная, Закат, Океан, Золото, Неон и Полночь.</string>
     <string name="NeyroGuideWhereAppIcon">Настройки → Neyrogram → Иконка приложения</string>
+    <string name="NeyroRemoteHeader">Удалённое управление</string>
+    <string name="NeyroRemote">Удалённое управление</string>
+    <string name="NeyroRemoteOn">Вкл</string>
+    <string name="NeyroRemoteOff">Выкл</string>
+    <string name="NeyroRemoteShortInfo">Управляйте своими устройствами из одной админ-панели на своём сервере.</string>
+    <string name="NeyroRemoteEnable">Подключиться к админ-серверу</string>
+    <string name="NeyroRemoteEnableInfo">Это устройство будет отправлять свой статус на ваш сервер и принимать команды (выход, блокировка, отправка логов).</string>
+    <string name="NeyroRemoteServerHeader">Сервер</string>
+    <string name="NeyroRemoteServerHint">Адрес сервера, напр. http://1.2.3.4:8787</string>
+    <string name="NeyroRemoteTokenHint">Pair-токен</string>
+    <string name="NeyroRemoteFooter">Запустите admin-сервер Neyrogram на своём сервере, затем введите его адрес и pair-токен здесь. Подключаются только ваши устройства. Чужие аккаунты так получить нельзя.</string>
+    <string name="NeyroGuideRemoteTitle">Удалённое управление (админ-панель)</string>
+    <string name="NeyroGuideRemote">Следите и управляйте всеми своими установками Neyrogram из одной веб-панели на своём сервере: видно, какой аккаунт вошёл на каждом устройстве, статус онлайн и число непрочитанных, а также можно отправить команду — выйти из аккаунта, заблокировать приложение, отправить логи. Работает только с вашим сервером и вашими устройствами; чужие аккаунты получить нельзя.</string>
+    <string name="NeyroGuideWhereRemote">Настройки → Neyrogram → Удалённое управление</string>
 </resources>

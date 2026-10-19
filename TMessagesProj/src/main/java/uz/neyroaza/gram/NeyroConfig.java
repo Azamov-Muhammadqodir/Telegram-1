@@ -33,6 +33,11 @@ public class NeyroConfig {
     // Media
     public static boolean fastDownload;
 
+    // Masofaviy boshqaruv (admin server)
+    public static boolean adminEnabled;
+    public static String adminServer = "";
+    public static String adminPairToken = "";
+
     private static boolean loaded;
 
     public static synchronized void load() {
@@ -51,7 +56,14 @@ public class NeyroConfig {
         storyViewersAlways = p.getBoolean("storyViewersAlways", true);
         neyroEmojiStatus = p.getBoolean("neyroEmojiStatus", true);
         shareEmojiStatus = p.getBoolean("shareEmojiStatus", true);
+        adminEnabled = p.getBoolean("adminEnabled", false);
+        adminServer = p.getString("adminServer", "");
+        adminPairToken = p.getString("adminPairToken", "");
         loaded = true;
+    }
+
+    public static void putString(String key, String value) {
+        prefs().edit().putString(key, value).apply();
     }
 
     public static SharedPreferences prefs() {

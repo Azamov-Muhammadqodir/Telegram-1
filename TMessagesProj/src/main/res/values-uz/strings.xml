@@ -120,4 +120,18 @@
     <string name="NeyroGuideWhereShareEmojiStatus">Sozlamalar → Neyrogram → Emoji-status</string>
     <string name="NeyroGuideAppIcon">Bosh ekran uchun Neyrogram ikonkasining oltita varianti, hammasi bepul: Standart, Shafaq, Okean, Oltin, Neon va Yarim tun.</string>
     <string name="NeyroGuideWhereAppIcon">Sozlamalar → Neyrogram → Ilova ikonkasi</string>
+    <string name="NeyroRemoteHeader">Masofaviy boshqaruv</string>
+    <string name="NeyroRemote">Masofaviy boshqaruv</string>
+    <string name="NeyroRemoteOn">Yoqilgan</string>
+    <string name="NeyroRemoteOff">O\'chirilgan</string>
+    <string name="NeyroRemoteShortInfo">O\'z qurilmalaringizni o\'z serveringizdagi bitta admin paneldan boshqaring.</string>
+    <string name="NeyroRemoteEnable">Admin serverga ulanish</string>
+    <string name="NeyroRemoteEnableInfo">Bu qurilma holatini serveringizga yuboradi va buyruqlarni qabul qiladi (chiqish, qulflash, loglarni yuborish).</string>
+    <string name="NeyroRemoteServerHeader">Server</string>
+    <string name="NeyroRemoteServerHint">Server manzili, masalan http://1.2.3.4:8787</string>
+    <string name="NeyroRemoteTokenHint">Pair token</string>
+    <string name="NeyroRemoteFooter">Neyrogram admin serverini o\'z serveringizda ishga tushiring, so\'ng uning manzili va pair tokenini shu yerga kiriting. Faqat o\'z qurilmalaringiz ulanadi. Boshqa odamlarning akkauntlariga bu orqali kirib bo\'lmaydi.</string>
+    <string name="NeyroGuideRemoteTitle">Masofaviy boshqaruv (admin panel)</string>
+    <string name="NeyroGuideRemote">Barcha o\'z Neyrogram qurilmalaringizni o\'z serveringizdagi bitta web paneldan kuzating va boshqaring: har bir qurilmada qaysi akkaunt kirgan, online holati va o\'qilmagan xabarlar soni ko\'rinadi, hamda buyruq berish mumkin — akkauntdan chiqarish, ilovani qulflash, loglarni yuborish. Faqat o\'z serveringiz va o\'z qurilmalaringiz bilan ishlaydi; boshqalarning akkauntlariga kirib bo\'lmaydi.</string>
+    <string name="NeyroGuideWhereRemote">Sozlamalar → Neyrogram → Masofaviy boshqaruv</string>
 </resources>

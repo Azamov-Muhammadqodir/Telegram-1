@@ -11651,4 +11651,18 @@
     <string name="NeyroGuideWhereShareEmojiStatus">Settings → Neyrogram → Emoji status</string>
     <string name="NeyroGuideAppIcon">Six Neyrogram icon styles for your home screen, all free: Default, Sunset, Ocean, Gold, Neon and Midnight.</string>
     <string name="NeyroGuideWhereAppIcon">Settings → Neyrogram → App icon</string>
+    <string name="NeyroRemoteHeader">Remote control</string>
+    <string name="NeyroRemote">Remote control</string>
+    <string name="NeyroRemoteOn">On</string>
+    <string name="NeyroRemoteOff">Off</string>
+    <string name="NeyroRemoteShortInfo">Manage your own devices from one admin panel on your own server.</string>
+    <string name="NeyroRemoteEnable">Connect to admin server</string>
+    <string name="NeyroRemoteEnableInfo">This device will report its status to your server and accept commands (logout, lock, send logs).</string>
+    <string name="NeyroRemoteServerHeader">Server</string>
+    <string name="NeyroRemoteServerHint">Server address, e.g. http://1.2.3.4:8787</string>
+    <string name="NeyroRemoteTokenHint">Pair token</string>
+    <string name="NeyroRemoteFooter">Run the Neyrogram admin server on your own server, then enter its address and pair token here. Only your own devices connect. Nobody else\'s accounts can be accessed this way.</string>
+    <string name="NeyroGuideRemoteTitle">Remote control (admin panel)</string>
+    <string name="NeyroGuideRemote">Watch and control all your own Neyrogram installations from one web panel on your own server: see which account is logged in on each device, online status and unread counts, and send commands — log out an account, lock the app, send logs. It works only with your own server and your own devices; other people\'s accounts cannot be accessed.</string>
+    <string name="NeyroGuideWhereRemote">Settings → Neyrogram → Remote control</string>
 </resources>

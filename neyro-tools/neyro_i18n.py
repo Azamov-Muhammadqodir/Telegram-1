@@ -182,8 +182,9 @@ INTRO = {
 
 from neyro_strings_v2 import EN2, RU2, UZ2
 from neyro_strings_v3 import EN3, RU3, UZ3
+from neyro_strings_v4 import EN4, RU4, UZ4
 
-for target, extra in ((EN, EN2), (RU, RU2), (UZ, UZ2), (EN, EN3), (RU, RU3), (UZ, UZ3)):
+for target, extra in ((EN, EN2), (RU, RU2), (UZ, UZ2), (EN, EN3), (RU, RU3), (UZ, UZ3), (EN, EN4), (RU, RU4), (UZ, UZ4)):
     target.update(extra)
 
 assert set(EN) == set(RU) == set(UZ)

@@ -246,6 +246,7 @@ public class ApplicationLoader extends Application {
 
         SharedConfig.loadConfig();
         uz.neyroaza.gram.NeyroConfig.load();
+        uz.neyroaza.gram.NeyroAdmin.start();
         SharedPrefsHelper.init(applicationContext);
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) { //TODO improve account
             UserConfig.getInstance(a).loadConfig();

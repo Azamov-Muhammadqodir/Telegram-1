@@ -50,6 +50,7 @@ public class NeyroFeaturesActivity extends UniversalFragment {
             {R.string.NeyroGuideMultiAccountTitle, R.string.NeyroGuideMultiAccount, R.string.NeyroGuideWhereMultiAccount},
             {R.string.NeyroGuideLanguagesTitle, R.string.NeyroGuideLanguages, R.string.NeyroGuideWhereLanguages},
             {R.string.NeyroAppIcon, R.string.NeyroGuideAppIcon, R.string.NeyroGuideWhereAppIcon},
+            {R.string.NeyroGuideRemoteTitle, R.string.NeyroGuideRemote, R.string.NeyroGuideWhereRemote},
     };
 
     private static final int[][] EMOJI_STATUS = {
