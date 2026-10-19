@@ -571,7 +571,7 @@ public class LocaleController {
         addRules(new String[]{"bem", "brx", "da", "de", "el", "en", "eo", "es", "et", "fi", "fo", "gl", "he", "iw", "it", "nb",
                 "nl", "nn", "no", "sv", "af", "bg", "bn", "ca", "eu", "fur", "fy", "gu", "ha", "is", "ku",
                 "lb", "ml", "mr", "nah", "ne", "om", "or", "pa", "pap", "ps", "so", "sq", "sw", "ta", "te",
-                "tk", "ur", "zu", "mn", "gsw", "chr", "rm", "pt", "an", "ast"}, new PluralRules_One());
+                "tk", "ur", "zu", "mn", "gsw", "chr", "rm", "pt", "an", "ast", "uz"}, new PluralRules_One());
         addRules(new String[]{"cs", "sk"}, new PluralRules_Czech());
         addRules(new String[]{"ff", "fr", "kab"}, new PluralRules_French());
         addRules(new String[]{"ru", "uk", "be"}, new PluralRules_Balkan());
@@ -683,6 +683,15 @@ public class LocaleController {
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
 
+        localeInfo = new LocaleInfo();
+        localeInfo.name = "O‘zbekcha";
+        localeInfo.nameEnglish = "Uzbek";
+        localeInfo.shortName = localeInfo.pluralLangCode = "uz";
+        localeInfo.pathToFile = null;
+        localeInfo.builtIn = true;
+        languages.add(localeInfo);
+        languagesDict.put(localeInfo.shortName, localeInfo);
+
         loadOtherLanguages();
         if (remoteLanguages.isEmpty()) {
             AndroidUtilities.runOnUIThread(() -> loadRemoteLanguages(UserConfig.selectedAccount));
@@ -738,14 +747,9 @@ public class LocaleController {
                 }
             }
 
-            if (currentInfo == null && systemDefaultLocale.getLanguage() != null) {
-                currentInfo = getLanguageFromDict(systemDefaultLocale.getLanguage());
-            }
+            // Neyrogram: foydalanuvchi til tanlamagan bo'lsa, telefon tilidan qat'i nazar ingliz tili
             if (currentInfo == null) {
-                currentInfo = getLanguageFromDict(getLocaleString(systemDefaultLocale));
-                if (currentInfo == null) {
-                    currentInfo = getLanguageFromDict("en");
-                }
+                currentInfo = getLanguageFromDict("en");
             }
 
             applyLanguage(currentInfo, override, true, UserConfig.selectedAccount);
@@ -4441,11 +4445,19 @@ public class LocaleController {
     }
 
     @Nullable
+    // Neyrogram: brending matnlari serverdagi Telegram tarjimalari bilan almashtirilmasin
+    private static boolean isNeyroLocalOnly(String key, int stringRes) {
+        if (stringRes != 0) {
+            return stringRes == R.string.AppName || stringRes == R.string.AppNameBeta || stringRes == R.string.Page1Title || stringRes == R.string.Page1Message;
+        }
+        return "AppName".equals(key) || "AppNameBeta".equals(key) || "Page1Title".equals(key) || "Page1Message".equals(key);
+    }
+
     private String getStringV2(String key, @StringRes int stringRes, String fallback) {
         final Context context = ApplicationLoader.applicationContext;
         String value;
 
-        if (BuildVars.USE_CLOUD_STRINGS) {
+        if (BuildVars.USE_CLOUD_STRINGS && !isNeyroLocalOnly(key, stringRes)) {
             value = localizationExternal.getByResNameOrResId(context, key, stringRes);
             if (value != null) {
                 return value;

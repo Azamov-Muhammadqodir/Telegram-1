@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Telegram</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Neyrogram</string>
+    <string name="AppNameBeta">Neyrogram Beta</string>
     <string name="LanguageName">Русский</string>
     <string name="English">Английский</string>
     <string name="LanguageNameInEnglish">Russian</string>
@@ -209,13 +209,13 @@
     <string name="CheckYourNewEmailSubtitle">Введите код, который пришёл на указанный Вами адрес %1$s.</string>
     <string name="LoginOrSingInWithGoogle">или</string>
     <!--Intro view-->
-    <string name="Page1Title">Telegram</string>
+    <string name="Page1Title">Neyrogram</string>
     <string name="Page2Title">Быстрый</string>
     <string name="Page3Title">Бесплатный</string>
     <string name="Page4Title">Безопасный</string>
     <string name="Page5Title">Мощный</string>
     <string name="Page6Title">Облачный</string>
-    <string name="Page1Message">Самый **быстрый** мессенджер в мире.\n**Бесплатный** и **безопасный**.</string>
+    <string name="Page1Message">Telegram **на максимум**.\nРежим призрака, скрытые чаты и многое другое.</string>
     <string name="Page2Message">**Telegram** доставляет сообщения быстрее\nлюбого другого приложения.</string>
     <string name="Page3Message">**Telegram** предоставляет бесплатное безлимитное облачное хранилище для чатов и медиа.\n</string>
     <string name="Page4Message">**Telegram** защищает Вашу переписку от злоумышленников.</string>
@@ -263,4 +263,58 @@
     <string name="RemindTodayAt">\'Отправить сегодня в\' HH:mm</string>
     <string name="RemindDayAt">\'Отправить\' d MMM \'в\' HH:mm</string>
     <string name="RemindDayYearAt">\'Напомнить\' d MMM yyyy \'в\' HH:mm</string>
+    <!-- Neyrogram -->
+    <string name="NeyroSettings">Neyrogram</string>
+    <string name="NeyroSettingsInfo">Режим призрака, скрытые чаты и другое</string>
+    <string name="NeyroGhostHeader">Режим призрака</string>
+    <string name="NeyroGhostAll">Включить режим призрака полностью</string>
+    <string name="NeyroGhostOnline">Скрывать статус «в сети»</string>
+    <string name="NeyroGhostOnlineInfo">Другие никогда не увидят вас «в сети»</string>
+    <string name="NeyroGhostRead">Не отправлять отметки о прочтении</string>
+    <string name="NeyroGhostReadInfo">Собеседник не узнает, что вы прочитали сообщение</string>
+    <string name="NeyroGhostTyping">Скрывать «печатает...»</string>
+    <string name="NeyroGhostTypingInfo">Никто не увидит, что вы набираете сообщение</string>
+    <string name="NeyroGhostStories">Скрывать просмотры историй</string>
+    <string name="NeyroGhostStoriesInfo">Вы не появитесь в списке просмотревших историю</string>
+    <string name="NeyroGhostFooter">Без отметок о прочтении сообщения остаются непрочитанными и на других ваших устройствах.</string>
+    <string name="NeyroMessagesHeader">Сообщения</string>
+    <string name="NeyroSaveDeleted">Сохранять удалённые сообщения</string>
+    <string name="NeyroSaveDeletedInfo">Сообщения, удалённые другими, остаются с пометкой «удалено»</string>
+    <string name="NeyroSaveEdits">Сохранять историю изменений</string>
+    <string name="NeyroSaveEditsInfo">Старые версии изменённых сообщений сохраняются</string>
+    <string name="NeyroForwardNoAuthor">Пересылка без автора</string>
+    <string name="NeyroForwardNoAuthorInfo">В пересланных сообщениях не будет строки «Переслано от»</string>
+    <string name="NeyroPrivacyHeader">Конфиденциальность</string>
+    <string name="NeyroHiddenChats">Скрытые чаты</string>
+    <string name="NeyroHiddenChatsFooter">Чтобы скрыть чат, откройте его и выберите «Скрыть чат» в меню ⋮.</string>
+    <string name="NeyroHiddenChatsEmpty">Скрытых чатов пока нет.</string>
+    <string name="NeyroHiddenChatsHint">Нажмите на чат и удерживайте, чтобы сделать его видимым.</string>
+    <string name="NeyroHideChat">Скрыть чат</string>
+    <string name="NeyroUnhideChat">Показать чат</string>
+    <string name="NeyroUnhideChatConfirm">Этот чат снова появится в списке чатов.</string>
+    <string name="NeyroChatHidden">Чат скрыт</string>
+    <string name="NeyroChatUnhidden">Чат снова виден в списке</string>
+    <string name="NeyroHiddenCreatePin">Создайте PIN-код</string>
+    <string name="NeyroHiddenCreatePinInfo">Придумайте PIN-код минимум из 4 цифр для доступа к скрытым чатам.</string>
+    <string name="NeyroHiddenEnterPin">Введите PIN-код</string>
+    <string name="NeyroHiddenPinTooShort">PIN-код должен содержать минимум 4 цифры</string>
+    <string name="NeyroHiddenWrongPin">Неверный PIN-код</string>
+    <string name="NeyroMediaHeader">Медиа</string>
+    <string name="NeyroFastDownload">Ускоренная загрузка</string>
+    <string name="NeyroFastDownloadInfo">Файлы загружаются крупными частями параллельно</string>
+    <string name="NeyroInterfaceHeader">Интерфейс</string>
+    <string name="NeyroSystemFont">Системный шрифт</string>
+    <string name="NeyroTranslateSettings">Настройки перевода</string>
+    <string name="NeyroRestartRequired">Изменение полностью применится после перезапуска приложения</string>
+    <string name="NeyroDataHeader">Данные</string>
+    <string name="NeyroClearDeleted">Очистить пометки удалённых сообщений</string>
+    <string name="NeyroClearEdits">Очистить историю изменений</string>
+    <string name="NeyroClearConfirm">Это действие нельзя отменить.</string>
+    <string name="NeyroCleared">Очищено</string>
+    <string name="NeyroAbout">Neyrogram — неофициальный клиент Telegram на основе Telegram API.</string>
+    <string name="NeyroDeletedMark">удалено</string>
+    <string name="NeyroEditHistory">История изменений</string>
+    <string name="NeyroEditHistoryCurrent">Текущая версия</string>
+    <string name="NeyroSaveSticker">Сохранить стикер</string>
+    <string name="NeyroStickerNotDownloaded">Стикер ещё не загружен</string>
 </resources>
