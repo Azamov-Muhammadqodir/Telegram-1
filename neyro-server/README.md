@@ -1,0 +1,37 @@
+# Neyrogram admin server
+
+O'z qurilmalaringizdagi Neyrogram'ni bitta joydan ko'rish va boshqarish.
+Zero dependency, faqat Node.js 18+ kerak.
+
+## Ishga tushirish (serveringizda)
+
+    node server.js
+
+Birinchi ishga tushganda `config.json` yaratiladi va konsolda **Admin token**
+hamda **Pair token** chiqadi. Ularni saqlab qo'ying.
+
+Doimiy ishlashi uchun (systemd, pm2 yoki):
+
+    nohup node server.js > neyro.log 2>&1 &
+
+Port standart 8787. O'zgartirish: `config.json` dagi `port`, yoki `PORT=9000 node server.js`.
+
+## Admin panel
+
+Brauzerda: `http://<server-ip>:8787/admin` → Admin tokenni kiriting.
+Qurilmalar ro'yxati, holati (online, o'qilmagan xabarlar) va buyruqlar shu yerda.
+
+## Qurilmalarni ulash
+
+Har bir telefonda: Neyrogram → Sozlamalar → Neyrogram → (keyingi versiyada qo'shiladi)
+"Masofaviy boshqaruv" → server manzili va **Pair token**ni kiriting.
+
+> ESLATMA: bu faqat O'ZINGIZNING qurilmalaringiz uchun. Server va tokenlar
+> sizda. Boshqa odamlarning qurilmalarini ulab bo'lmaydi.
+
+## Xavfsizlik
+
+- `config.json` va `data.json` ni maxfiy saqlang (tokenlar bor).
+- Serverni HTTPS orqasida (nginx reverse proxy) ishlatish tavsiya etiladi.
+- "Loglarni yuborish" buyrug'i log fayllarini serverga yuklaydi — ularda
+  shaxsiy ma'lumot bo'lishi mumkin, `logs/` papkasini himoyalang.
