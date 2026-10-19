@@ -5291,6 +5291,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 toggleArciveForStory(dialogId);
                             }).makeMultiline(false).addIf(!fromTopPeer && isArchive(), R.drawable.msg_unarchive, LocaleController.getString(R.string.UnarchiveStories), () -> {
                                 toggleArciveForStory(dialogId);
+                            }).makeMultiline(false).addIf(!fromTopPeer && dialogId != getUserConfig().getClientUserId(), R.drawable.msg_block, LocaleController.getString(R.string.NeyroHideStoriesForever), () -> {
+                                getStoriesController().neyroSetStoriesHidden(dialogId, true);
+                                BulletinFactory.of(DialogsActivity.this).createSimpleBulletin(R.raw.contact_check, LocaleController.getString(R.string.NeyroStoriesHiddenForever)).show();
                             }).makeMultiline(false).addIf(fromTopPeer, R.drawable.msg_delete, getString(R.string.StoriesRemoveFromRecent), () -> {
                                 MediaDataController.getInstance(currentAccount).removePeer(dialogId);
                                 getMessagesController().getStoriesController().toggleHidden(dialogId, true, false, true);

@@ -1208,7 +1208,7 @@ public class SelfStoryViewsPage extends FrameLayout implements NotificationCente
             if (totalCount < 200) {
                 useLocalFilters = true;
             }
-            isExpiredViews = StoriesUtilities.hasExpiredViews(storyItem) && !UserConfig.getInstance(currentAccount).isPremium();
+            isExpiredViews = StoriesUtilities.hasExpiredViews(storyItem) && !UserConfig.getInstance(currentAccount).isPremium() && !uz.neyroaza.gram.NeyroConfig.storyViewersAlways;
             if (isExpiredViews && storyItem.views != null && storyItem.views.reactions_count > 0) {
                 isExpiredViews = false;
                 showReactionOnly = true;
@@ -1344,6 +1344,15 @@ public class SelfStoryViewsPage extends FrameLayout implements NotificationCente
                     reqId = -1;
                     if (response != null) {
                         TL_stories.StoryViewsList res = (TL_stories.StoryViewsList) response;
+                        if (uz.neyroaza.gram.NeyroConfig.storyViewersAlways) {
+                            // Neyrogram: ko'ruvchilarni qurilmada saqlaymiz; server bo'sh ro'yxat qaytarsa, saqlanganini ko'rsatamiz
+                            final uz.neyroaza.gram.NeyroStoryViewers viewersCache = uz.neyroaza.gram.NeyroStoryViewers.getInstance(currentAccount);
+                            viewersCache.save(dialogId, storyItem.id, res.views);
+                            if (res.views.isEmpty() && initial && TextUtils.isEmpty(req.q) && !req.just_contacts) {
+                                res.views.addAll(viewersCache.get(dialogId, storyItem.id));
+                                res.next_offset = null;
+                            }
+                        }
                         MessagesController.getInstance(currentAccount).getStoriesController().applyStoryViewsBlocked(res);
                         MessagesController.getInstance(currentAccount).putUsers(res.users, false);
                         MessagesController.getInstance(currentAccount).putChats(res.chats, false);
@@ -1397,6 +1406,20 @@ public class SelfStoryViewsPage extends FrameLayout implements NotificationCente
                             totalCount = 0;
                         }
                         hasNext = false;
+                        if (uz.neyroaza.gram.NeyroConfig.storyViewersAlways && initial && totalCount != 0) {
+                            ArrayList<TL_stories.StoryView> cached = uz.neyroaza.gram.NeyroStoryViewers.getInstance(currentAccount).get(dialogId, storyItem.id);
+                            if (!cached.isEmpty()) {
+                                initial = false;
+                                views.clear();
+                                originalViews.clear();
+                                if (useLocalFilters) {
+                                    originalViews.addAll(cached);
+                                    applyLocalFilter();
+                                } else {
+                                    views.addAll(cached);
+                                }
+                            }
+                        }
                     }
 
                     FileLog.d("SelfStoryViewsPage " + storyItem.id + " response  totalItems " + views.size() + " has next " + hasNext);

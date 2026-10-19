@@ -35,6 +35,9 @@ public class NeyroSettingsActivity extends UniversalFragment {
     private static final int ID_HIDDEN_CHATS = 40;
     private static final int ID_CLEAR_DELETED = 50;
     private static final int ID_CLEAR_EDITS = 51;
+    private static final int ID_GUIDE = 60;
+    private static final int ID_STORY_VIEWERS = 70;
+    private static final int ID_HIDDEN_STORIES = 71;
 
     @Override
     protected CharSequence getTitle() {
@@ -43,6 +46,9 @@ public class NeyroSettingsActivity extends UniversalFragment {
 
     @Override
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
+        items.add(UItem.asButton(ID_GUIDE, R.drawable.msg_help, getString(R.string.NeyroFeaturesGuide), getString(R.string.NeyroFeaturesGuideInfo)));
+        items.add(UItem.asShadow(null));
+
         items.add(UItem.asHeader(getString(R.string.NeyroGhostHeader)));
         items.add(UItem.asRippleCheck(ID_GHOST_ALL, getString(R.string.NeyroGhostAll)).setChecked(NeyroConfig.isGhostModeFull()));
         items.add(UItem.asButtonCheck(ID_GHOST_ONLINE, getString(R.string.NeyroGhostOnline), getString(R.string.NeyroGhostOnlineInfo)).setChecked(NeyroConfig.ghostHideOnline));
@@ -61,6 +67,12 @@ public class NeyroSettingsActivity extends UniversalFragment {
         int hiddenCount = NeyroHiddenChats.getInstance(currentAccount).getHidden().size();
         items.add(UItem.asButton(ID_HIDDEN_CHATS, R.drawable.msg_archive_hide, getString(R.string.NeyroHiddenChats), hiddenCount > 0 ? String.valueOf(hiddenCount) : null));
         items.add(UItem.asShadow(getString(R.string.NeyroHiddenChatsFooter)));
+
+        items.add(UItem.asHeader(getString(R.string.NeyroStoriesHeader)));
+        items.add(UItem.asButtonCheck(ID_STORY_VIEWERS, getString(R.string.NeyroStoryViewersAlways), getString(R.string.NeyroStoryViewersAlwaysInfo)).setChecked(NeyroConfig.storyViewersAlways));
+        int hiddenStoriesCount = NeyroHiddenStories.getInstance(currentAccount).getAll().size();
+        items.add(UItem.asButton(ID_HIDDEN_STORIES, R.drawable.msg_block, getString(R.string.NeyroHiddenStories), hiddenStoriesCount > 0 ? String.valueOf(hiddenStoriesCount) : null));
+        items.add(UItem.asShadow(getString(R.string.NeyroHiddenStoriesFooter)));
 
         items.add(UItem.asHeader(getString(R.string.NeyroMediaHeader)));
         items.add(UItem.asButtonCheck(ID_FAST_DOWNLOAD, getString(R.string.NeyroFastDownload), getString(R.string.NeyroFastDownloadInfo)).setChecked(NeyroConfig.fastDownload));
@@ -113,6 +125,15 @@ public class NeyroSettingsActivity extends UniversalFragment {
                 SharedConfig.toggleUseSystemBoldFont();
                 BulletinFactory.of(this).createSimpleBulletin(R.raw.info, getString(R.string.NeyroRestartRequired)).show();
                 break;
+            case ID_GUIDE:
+                presentFragment(new NeyroFeaturesActivity());
+                return;
+            case ID_STORY_VIEWERS:
+                NeyroConfig.putBoolean("storyViewersAlways", NeyroConfig.storyViewersAlways = !NeyroConfig.storyViewersAlways);
+                break;
+            case ID_HIDDEN_STORIES:
+                presentFragment(new NeyroHiddenStoriesActivity());
+                return;
             case ID_TRANSLATE:
                 presentFragment(new LanguageSelectActivity());
                 return;

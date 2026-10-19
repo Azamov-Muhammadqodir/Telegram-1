@@ -23,6 +23,9 @@ public class NeyroConfig {
     public static boolean saveEditHistory;
     public static boolean forwardWithoutAuthor;
 
+    // Storylar
+    public static boolean storyViewersAlways;
+
     // Media
     public static boolean fastDownload;
 
@@ -41,6 +44,7 @@ public class NeyroConfig {
         saveEditHistory = p.getBoolean("saveEditHistory", true);
         forwardWithoutAuthor = p.getBoolean("forwardWithoutAuthor", false);
         fastDownload = p.getBoolean("fastDownload", true);
+        storyViewersAlways = p.getBoolean("storyViewersAlways", true);
         loaded = true;
     }
 

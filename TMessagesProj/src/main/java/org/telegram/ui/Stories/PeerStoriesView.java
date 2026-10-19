@@ -2050,6 +2050,13 @@ public class PeerStoriesView extends SizeNotifierFrameLayout implements Notifica
                                         }
                                     });
                                 }
+                                ActionBarMenuItem.addItem(popupLayout, R.drawable.msg_block, getString(R.string.NeyroHideStoriesForever), false, resourcesProvider).setOnClickListener(v -> {
+                                    if (popupMenu != null) {
+                                        popupMenu.dismiss();
+                                    }
+                                    storyViewer.close(true);
+                                    storiesController.neyroSetStoriesHidden(dialogId, true);
+                                });
                             }
                         }
 

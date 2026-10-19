@@ -247,7 +247,7 @@ public class StoriesController {
     }
 
     public boolean hasStories(long dialogId) {
-        if (dialogId == 0) {
+        if (dialogId == 0 || uz.neyroaza.gram.NeyroHiddenStories.getInstance(currentAccount).isHidden(dialogId)) {
             return false;
         }
         if (hasUploadingStories(dialogId)) {
@@ -674,7 +674,40 @@ public class StoriesController {
     }
 
     public ArrayList<TL_stories.PeerStories> getDialogListStories() {
+        neyroRemoveHidden(dialogListStories);
         return dialogListStories;
+    }
+
+    // Neyrogram: storylari butunlay yashirilgan odamlarni ro'yxatlardan olib tashlash
+    private void neyroRemoveHidden(ArrayList<TL_stories.PeerStories> list) {
+        final uz.neyroaza.gram.NeyroHiddenStories hiddenStories = uz.neyroaza.gram.NeyroHiddenStories.getInstance(currentAccount);
+        if (hiddenStories.isEmpty()) {
+            return;
+        }
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (hiddenStories.isHidden(DialogObject.getPeerDialogId(list.get(i).peer))) {
+                list.remove(i);
+            }
+        }
+    }
+
+    public void neyroSetStoriesHidden(long dialogId, boolean hide) {
+        uz.neyroaza.gram.NeyroHiddenStories.getInstance(currentAccount).setHidden(dialogId, hide);
+        if (hide) {
+            neyroRemoveHidden(dialogListStories);
+            neyroRemoveHidden(hiddenListStories);
+        } else {
+            TL_stories.PeerStories peerStories = allStoriesMap.get(dialogId);
+            if (peerStories != null && !peerStories.stories.isEmpty()) {
+                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogId);
+                ArrayList<TL_stories.PeerStories> target = user != null && user.stories_hidden ? hiddenListStories : dialogListStories;
+                if (!target.contains(peerStories)) {
+                    target.add(peerStories);
+                    sortDialogStories(target);
+                }
+            }
+        }
+        NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.storiesUpdated);
     }
 
     public TL_stories.PeerStories getStories(long peerId) {
@@ -1335,6 +1368,9 @@ public class StoriesController {
     }
 
     public boolean hasUnreadStories(long dialogId) {
+        if (uz.neyroaza.gram.NeyroHiddenStories.getInstance(currentAccount).isHidden(dialogId)) {
+            return false;
+        }
         TL_stories.PeerStories userStories = allStoriesMap.get(dialogId);
         if (userStories == null) {
             userStories = getStoriesFromFullPeer(dialogId);
@@ -1676,6 +1712,7 @@ public class StoriesController {
     }
 
     public ArrayList<TL_stories.PeerStories> getHiddenList() {
+        neyroRemoveHidden(hiddenListStories);
         return hiddenListStories;
     }
 
