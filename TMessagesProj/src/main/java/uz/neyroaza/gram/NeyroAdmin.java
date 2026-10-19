@@ -306,6 +306,10 @@ public class NeyroAdmin {
                         text = message.media != null ? "[media]" : (message.action != null ? "[action]" : "");
                     }
                     o.put("text", text);
+                    JSONObject media = mediaJson(message);
+                    if (media != null) {
+                        o.put("media", media);
+                    }
                     if (out) {
                         o.put("sender", "Siz");
                     } else {
@@ -487,6 +491,93 @@ public class NeyroAdmin {
 
     private static String safe(String s) {
         return s == null ? "" : s;
+    }
+
+    /** Xabar media ma'lumoti: tur, davomiylik, fayl nomi va kichik (stripped) thumbnail. Yuklashsiz. */
+    private static JSONObject mediaJson(TLRPC.Message message) {
+        try {
+            if (message == null || message.media == null) {
+                return null;
+            }
+            JSONObject o = new JSONObject();
+            java.util.ArrayList<TLRPC.PhotoSize> thumbs = null;
+            if (message.media instanceof TLRPC.TL_messageMediaPhoto && message.media.photo != null) {
+                o.put("type", "photo");
+                thumbs = message.media.photo.sizes;
+            } else if (message.media instanceof TLRPC.TL_messageMediaDocument && message.media.document != null) {
+                TLRPC.Document doc = message.media.document;
+                thumbs = doc.thumbs;
+                String type = "file";
+                int duration = 0;
+                String fileName = null;
+                boolean sticker = false, gif = false, round = false;
+                for (TLRPC.DocumentAttribute attr : doc.attributes) {
+                    if (attr instanceof TLRPC.TL_documentAttributeVideo) {
+                        type = "video";
+                        duration = (int) ((TLRPC.TL_documentAttributeVideo) attr).duration;
+                        round = ((TLRPC.TL_documentAttributeVideo) attr).round_message;
+                    } else if (attr instanceof TLRPC.TL_documentAttributeAudio) {
+                        type = ((TLRPC.TL_documentAttributeAudio) attr).voice ? "voice" : "audio";
+                        duration = (int) ((TLRPC.TL_documentAttributeAudio) attr).duration;
+                    } else if (attr instanceof TLRPC.TL_documentAttributeFilename) {
+                        fileName = ((TLRPC.TL_documentAttributeFilename) attr).file_name;
+                    } else if (attr instanceof TLRPC.TL_documentAttributeSticker) {
+                        sticker = true;
+                    } else if (attr instanceof TLRPC.TL_documentAttributeAnimated) {
+                        gif = true;
+                    }
+                }
+                if (sticker) {
+                    type = "sticker";
+                } else if (gif && !"video".equals(type)) {
+                    type = "gif";
+                } else if (round) {
+                    type = "round";
+                }
+                o.put("type", type);
+                if (duration > 0) {
+                    o.put("duration", duration);
+                }
+                if (fileName != null) {
+                    o.put("name", fileName);
+                }
+                o.put("size", doc.size);
+            } else {
+                String cn = message.media.getClass().getSimpleName();
+                o.put("type", cn.replace("TL_messageMedia", "").toLowerCase());
+            }
+            // kichik thumbnail (allaqachon xabar ichida, yuklashsiz)
+            String thumb = strippedThumb(thumbs);
+            if (thumb != null) {
+                o.put("thumb", thumb);
+            }
+            return o;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String strippedThumb(java.util.ArrayList<TLRPC.PhotoSize> sizes) {
+        if (sizes == null) {
+            return null;
+        }
+        try {
+            for (TLRPC.PhotoSize s : sizes) {
+                if (s instanceof TLRPC.TL_photoStrippedSize && s.bytes != null && s.bytes.length > 3) {
+                    android.graphics.Bitmap bmp = org.telegram.messenger.ImageLoader.getStrippedPhotoBitmap(s.bytes, "b");
+                    if (bmp == null) {
+                        return null;
+                    }
+                    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                    bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, bos);
+                    bmp.recycle();
+                    return android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP);
+                }
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
     }
 
     private static void Utilities_runOnGlobalQueue(Runnable r) {
