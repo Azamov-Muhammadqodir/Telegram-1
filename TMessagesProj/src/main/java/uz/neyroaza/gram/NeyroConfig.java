@@ -26,6 +26,10 @@ public class NeyroConfig {
     // Storylar
     public static boolean storyViewersAlways;
 
+    // Emoji-status (Premium'siz)
+    public static boolean neyroEmojiStatus;
+    public static boolean shareEmojiStatus;
+
     // Media
     public static boolean fastDownload;
 
@@ -45,6 +49,8 @@ public class NeyroConfig {
         forwardWithoutAuthor = p.getBoolean("forwardWithoutAuthor", false);
         fastDownload = p.getBoolean("fastDownload", true);
         storyViewersAlways = p.getBoolean("storyViewersAlways", true);
+        neyroEmojiStatus = p.getBoolean("neyroEmojiStatus", true);
+        shareEmojiStatus = p.getBoolean("shareEmojiStatus", true);
         loaded = true;
     }
 

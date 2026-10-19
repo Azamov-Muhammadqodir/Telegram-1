@@ -34,12 +34,14 @@ public class LauncherIconController {
     }
 
     public enum LauncherIcon {
-        DEFAULT("DefaultIcon", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
-        VINTAGE("VintageIcon", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconVintage),
-        AQUA("AquaIcon", R.drawable.icon_4_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconAqua),
-        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, true),
-        TURBO("TurboIcon", R.drawable.icon_5_background_sa, R.mipmap.icon_5_foreground_sa, R.string.AppIconTurbo, true),
-        NOX("NoxIcon", R.mipmap.icon_2_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconNox, true);
+        // Neyrogram: Telegram ikonkalari o'rniga Neyrogram rang variantlari, hammasi Premium'siz ochiq
+        // (alias nomlari manifest bilan bog'liq, shuning uchun o'zgartirilmagan)
+        DEFAULT("DefaultIcon", R.drawable.neyro_icon_bg_default, R.drawable.neyro_icon_fg_default, R.string.NeyroIconDefault),
+        VINTAGE("VintageIcon", R.drawable.neyro_icon_bg_sunset, R.drawable.neyro_icon_fg_sunset, R.string.NeyroIconSunset),
+        AQUA("AquaIcon", R.drawable.neyro_icon_bg_ocean, R.drawable.neyro_icon_fg_ocean, R.string.NeyroIconOcean),
+        PREMIUM("PremiumIcon", R.drawable.neyro_icon_bg_gold, R.drawable.neyro_icon_fg_gold, R.string.NeyroIconGold),
+        TURBO("TurboIcon", R.drawable.neyro_icon_bg_neon, R.drawable.neyro_icon_fg_neon, R.string.NeyroIconNeon),
+        NOX("NoxIcon", R.drawable.neyro_icon_bg_midnight, R.drawable.neyro_icon_fg_midnight, R.string.NeyroIconMidnight);
 
         public final String key;
         public final int background;

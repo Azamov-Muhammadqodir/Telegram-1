@@ -359,4 +359,24 @@
     <string name="NeyroGuideLanguagesTitle">Языки</string>
     <string name="NeyroGuideLanguages">Приложение доступно на английском, русском и узбекском. По умолчанию используется английский.</string>
     <string name="NeyroGuideWhereLanguages">Настройки → Язык</string>
+    <string name="NeyroEmojiStatusHeader">Эмодзи-статус</string>
+    <string name="NeyroEmojiStatus">Эмодзи-статус без Premium</string>
+    <string name="NeyroEmojiStatusInfo">Любой эмодзи-статус рядом с вашим именем</string>
+    <string name="NeyroShareEmojiStatus">Показывать статус пользователям Neyrogram</string>
+    <string name="NeyroShareEmojiStatusInfo">Добавляет невидимую метку в конец вашего описания</string>
+    <string name="NeyroEmojiStatusFooter">Нажмите на звёздочку рядом с названием приложения на главном экране, чтобы выбрать статус. В официальных приложениях Telegram статус у вас не отображается; пользователи Neyrogram увидят его, открыв ваш профиль или чат.</string>
+    <string name="NeyroEmojiStatusBioFull">Описание слишком длинное, чтобы поделиться статусом. Сократите его на 17 символов.</string>
+    <string name="NeyroAppIcon">Иконка приложения</string>
+    <string name="NeyroIconDefault">Стандартная</string>
+    <string name="NeyroIconSunset">Закат</string>
+    <string name="NeyroIconOcean">Океан</string>
+    <string name="NeyroIconGold">Золото</string>
+    <string name="NeyroIconNeon">Неон</string>
+    <string name="NeyroIconMidnight">Полночь</string>
+    <string name="NeyroGuideEmojiStatus">Ставит любой анимированный эмодзи рядом с вашим именем без Premium. Серверы Telegram разрешают статус только Premium-аккаунтам, поэтому статус хранится на этом устройстве.</string>
+    <string name="NeyroGuideWhereEmojiStatus">Нажмите на звёздочку рядом с названием приложения на главном экране</string>
+    <string name="NeyroGuideShareEmojiStatus">Другие пользователи Neyrogram видят ваш статус, открыв ваш профиль или чат. Это работает через 17 невидимых символов в конце описания — в официальном Telegram их не видно, и там вы выглядите как обычно.</string>
+    <string name="NeyroGuideWhereShareEmojiStatus">Настройки → Neyrogram → Эмодзи-статус</string>
+    <string name="NeyroGuideAppIcon">Шесть вариантов иконки Neyrogram для рабочего стола, все бесплатно: Стандартная, Закат, Океан, Золото, Неон и Полночь.</string>
+    <string name="NeyroGuideWhereAppIcon">Настройки → Neyrogram → Иконка приложения</string>
 </resources>

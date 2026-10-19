@@ -49,6 +49,12 @@ public class NeyroFeaturesActivity extends UniversalFragment {
             {R.string.NeyroFastDownload, R.string.NeyroGuideFastDownload, R.string.NeyroGuideWhereMedia},
             {R.string.NeyroGuideMultiAccountTitle, R.string.NeyroGuideMultiAccount, R.string.NeyroGuideWhereMultiAccount},
             {R.string.NeyroGuideLanguagesTitle, R.string.NeyroGuideLanguages, R.string.NeyroGuideWhereLanguages},
+            {R.string.NeyroAppIcon, R.string.NeyroGuideAppIcon, R.string.NeyroGuideWhereAppIcon},
+    };
+
+    private static final int[][] EMOJI_STATUS = {
+            {R.string.NeyroEmojiStatus, R.string.NeyroGuideEmojiStatus, R.string.NeyroGuideWhereEmojiStatus},
+            {R.string.NeyroShareEmojiStatus, R.string.NeyroGuideShareEmojiStatus, R.string.NeyroGuideWhereShareEmojiStatus},
     };
 
     @Override
@@ -63,6 +69,7 @@ public class NeyroFeaturesActivity extends UniversalFragment {
         addSection(items, R.string.NeyroMessagesHeader, MESSAGES);
         addSection(items, R.string.NeyroPrivacyHeader, PRIVACY);
         addSection(items, R.string.NeyroStoriesHeader, STORIES);
+        addSection(items, R.string.NeyroEmojiStatusHeader, EMOJI_STATUS);
         addSection(items, R.string.NeyroGuideOtherHeader, OTHER);
     }
 

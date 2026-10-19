@@ -11631,4 +11631,24 @@
     <string name="NeyroGuideLanguagesTitle">Languages</string>
     <string name="NeyroGuideLanguages">The app is available in English, Russian and Uzbek. English is used by default.</string>
     <string name="NeyroGuideWhereLanguages">Settings → Language</string>
+    <string name="NeyroEmojiStatusHeader">Emoji status</string>
+    <string name="NeyroEmojiStatus">Emoji status without Premium</string>
+    <string name="NeyroEmojiStatusInfo">Set any emoji status next to your name</string>
+    <string name="NeyroShareEmojiStatus">Show my status to Neyrogram users</string>
+    <string name="NeyroShareEmojiStatusInfo">Adds an invisible mark to the end of your bio</string>
+    <string name="NeyroEmojiStatusFooter">Tap the star next to the app name on the main screen to choose a status. Official Telegram apps show no status for you; Neyrogram users see it after opening your profile or chat.</string>
+    <string name="NeyroEmojiStatusBioFull">Your bio is too long to share the status. Shorten the bio by 17 characters.</string>
+    <string name="NeyroAppIcon">App icon</string>
+    <string name="NeyroIconDefault">Default</string>
+    <string name="NeyroIconSunset">Sunset</string>
+    <string name="NeyroIconOcean">Ocean</string>
+    <string name="NeyroIconGold">Gold</string>
+    <string name="NeyroIconNeon">Neon</string>
+    <string name="NeyroIconMidnight">Midnight</string>
+    <string name="NeyroGuideEmojiStatus">Puts any animated emoji next to your name without Premium. Telegram\'s servers only allow statuses for Premium accounts, so the status is stored on this device.</string>
+    <string name="NeyroGuideWhereEmojiStatus">Tap the star next to the app name on the main screen</string>
+    <string name="NeyroGuideShareEmojiStatus">Other Neyrogram users see your status after they open your profile or your chat. It works through 17 invisible characters at the end of your bio — in official Telegram they are not visible, and there you look as usual.</string>
+    <string name="NeyroGuideWhereShareEmojiStatus">Settings → Neyrogram → Emoji status</string>
+    <string name="NeyroGuideAppIcon">Six Neyrogram icon styles for your home screen, all free: Default, Sunset, Ocean, Gold, Neon and Midnight.</string>
+    <string name="NeyroGuideWhereAppIcon">Settings → Neyrogram → App icon</string>
 </resources>

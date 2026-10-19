@@ -100,4 +100,24 @@
     <string name="NeyroGuideLanguagesTitle">Tillar</string>
     <string name="NeyroGuideLanguages">Ilova ingliz, rus va o\'zbek tillarida mavjud. Standart til ingliz.</string>
     <string name="NeyroGuideWhereLanguages">Sozlamalar → Til</string>
+    <string name="NeyroEmojiStatusHeader">Emoji-status</string>
+    <string name="NeyroEmojiStatus">Premium\'siz emoji-status</string>
+    <string name="NeyroEmojiStatusInfo">Ismingiz yonida istalgan emoji-status</string>
+    <string name="NeyroShareEmojiStatus">Statusni Neyrogram foydalanuvchilariga ko\'rsatish</string>
+    <string name="NeyroShareEmojiStatusInfo">Bio oxiriga ko\'rinmas belgi qo\'shiladi</string>
+    <string name="NeyroEmojiStatusFooter">Status tanlash uchun asosiy ekranda ilova nomi yonidagi yulduzchani bosing. Rasmiy Telegram ilovalarida statusingiz ko\'rinmaydi; Neyrogram foydalanuvchilari esa profilingiz yoki chatingizni ochganda ko\'radi.</string>
+    <string name="NeyroEmojiStatusBioFull">Statusni ulashish uchun bio juda uzun. Bio\'ni 17 ta belgiga qisqartiring.</string>
+    <string name="NeyroAppIcon">Ilova ikonkasi</string>
+    <string name="NeyroIconDefault">Standart</string>
+    <string name="NeyroIconSunset">Shafaq</string>
+    <string name="NeyroIconOcean">Okean</string>
+    <string name="NeyroIconGold">Oltin</string>
+    <string name="NeyroIconNeon">Neon</string>
+    <string name="NeyroIconMidnight">Yarim tun</string>
+    <string name="NeyroGuideEmojiStatus">Premium\'siz ismingiz yoniga istalgan animatsion emoji qo\'yadi. Telegram serverlari statusni faqat Premium akkauntlarga ruxsat beradi, shuning uchun status shu qurilmada saqlanadi.</string>
+    <string name="NeyroGuideWhereEmojiStatus">Asosiy ekranda ilova nomi yonidagi yulduzchani bosing</string>
+    <string name="NeyroGuideShareEmojiStatus">Boshqa Neyrogram foydalanuvchilari profilingiz yoki chatingizni ochganda statusingizni ko\'radi. Bu bio oxiridagi 17 ta ko\'rinmas belgi orqali ishlaydi: rasmiy Telegram\'da ular ko\'rinmaydi va u yerda odatdagidek ko\'rinasiz.</string>
+    <string name="NeyroGuideWhereShareEmojiStatus">Sozlamalar → Neyrogram → Emoji-status</string>
+    <string name="NeyroGuideAppIcon">Bosh ekran uchun Neyrogram ikonkasining oltita varianti, hammasi bepul: Standart, Shafaq, Okean, Oltin, Neon va Yarim tun.</string>
+    <string name="NeyroGuideWhereAppIcon">Sozlamalar → Neyrogram → Ilova ikonkasi</string>
 </resources>

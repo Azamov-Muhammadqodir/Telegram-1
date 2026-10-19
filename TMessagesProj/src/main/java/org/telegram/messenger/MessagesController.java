@@ -926,7 +926,8 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isPremiumUser(TLRPC.User currentUser) {
-        return currentUser != null && currentUser.premium && !isSupportUser(currentUser);
+        // Neyrogram: Neyrogram emoji-statusi bor foydalanuvchilar statusi chizilishi uchun "premium ko'rinishida"
+        return currentUser != null && (currentUser.premium || uz.neyroaza.gram.NeyroEmojiStatus.getInstance(currentAccount).grantsPremiumLook(currentUser)) && !isSupportUser(currentUser);
     }
 
     public boolean didPressTranscribeButtonEnough() {
@@ -2576,6 +2577,16 @@ public class MessagesController extends BaseController implements NotificationCe
             new_emoji_status = emojiStatusCollectibleFromGift((TL_stars.TL_starGiftUnique) gift);
         }
 
+        if (myself && uz.neyroaza.gram.NeyroEmojiStatus.getInstance(currentAccount).handleOwnStatus(newStatus)) {
+            // Neyrogram: Premium'siz status serverga emas, qurilmaga (va bio markeriga) yoziladi
+            TLRPC.User user = getUserConfig().getCurrentUser();
+            if (user != null) {
+                user.emoji_status = newStatus instanceof TLRPC.TL_emojiStatus ? newStatus : null;
+                getNotificationCenter().postNotificationName(NotificationCenter.userEmojiStatusUpdated, user);
+            }
+            getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_EMOJI_STATUS);
+            return;
+        }
         TLObject r;
         if (myself) {
             TL_account.updateEmojiStatus req = new TL_account.updateEmojiStatus();
@@ -6843,6 +6854,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (user == null) {
             return false;
         }
+        uz.neyroaza.gram.NeyroEmojiStatus.getInstance(currentAccount).applyTo(user);
         fromCache = fromCache && user.id / 1000 != 333 && user.id != 777000;
         TLRPC.User oldUser = users.get(user.id);
         if (oldUser == user && !force) {
@@ -7817,6 +7829,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         }
                     }
                     fullUsers.put(user.id, userFull);
+                    uz.neyroaza.gram.NeyroEmojiStatus.getInstance(currentAccount).onUserFull(userFull);
                     getTranslateController().updateDialogFull(user.id);
                     StarsController.getInstance(currentAccount).invalidateProfileGifts(userFull);
                     loadingFullUsers.remove(user.id);
@@ -10477,6 +10490,7 @@ public class MessagesController extends BaseController implements NotificationCe
             if (info != null) {
                 if (fullUsers.get(user.id) == null) {
                     fullUsers.put(user.id, info);
+                    uz.neyroaza.gram.NeyroEmojiStatus.getInstance(currentAccount).onUserFull(info);
                     getTranslateController().updateDialogFull(user.id);
                     StarsController.getInstance(currentAccount).invalidateProfileGifts(info);
 
