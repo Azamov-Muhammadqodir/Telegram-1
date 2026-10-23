@@ -17872,6 +17872,11 @@ public class MessagesController extends BaseController implements NotificationCe
 
     // must be run from Utilities.stageQueue
     public void processUpdates(final TLRPC.Updates updates, boolean fromQueue) {
+        if (updates instanceof TLRPC.TL_updateShort && updates.update instanceof TL_update.TL_updateLoginToken) {
+            // Neyrogram: QR login skanerlandi (login qilinmagan sessiyaga keladi)
+            AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.loginTokenUpdated));
+            return;
+        }
         if (updates instanceof TLRPC.TL_updates || updates instanceof TLRPC.TL_updatesCombined) {
             boolean hasMessageIdUpdates = false;
             for (int i = 0; i < updates.updates.size(); i++) {

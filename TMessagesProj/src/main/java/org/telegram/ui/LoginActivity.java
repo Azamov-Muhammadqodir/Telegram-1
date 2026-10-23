@@ -104,6 +104,8 @@ import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.google.android.gms.auth.api.identity.GetPhoneNumberHintIntentRequest;
+import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -111,6 +113,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.safetynet.SafetyNet;
 import com.google.android.gms.tasks.Task;
+
+import uz.neyroaza.gram.NeyroQrLoginSheet;
 import com.google.android.play.core.integrity.IntegrityManager;
 import com.google.android.play.core.integrity.IntegrityManagerFactory;
 import com.google.android.play.core.integrity.IntegrityTokenRequest;
@@ -222,7 +226,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressLint("HardwareIds")
 public class LoginActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
     public final static boolean ENABLE_PASTED_TEXT_PROCESSING = false;
-    private final static int SHOW_DELAY = SharedConfig.getDevicePerformanceClass() <= SharedConfig.PERFORMANCE_CLASS_AVERAGE ? 150 : 100;
+    private final static int REQUEST_CODE_PHONE_HINT = 230;
+    private final static int SHOW_DELAY =SharedConfig.getDevicePerformanceClass() <= SharedConfig.PERFORMANCE_CLASS_AVERAGE ? 150 : 100;
 
     public static final boolean TEST_BACKEND_IN_STORE = false;
 
@@ -1148,6 +1153,17 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
     @Override
     public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_PHONE_HINT) {
+            if (resultCode == Activity.RESULT_OK && getParentActivity() != null && views[VIEW_PHONE_INPUT] instanceof PhoneView) {
+                try {
+                    String number = Identity.getSignInClient(getParentActivity()).getPhoneNumberFromIntent(data);
+                    ((PhoneView) views[VIEW_PHONE_INPUT]).applyNumber(number);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+            return;
+        }
         LoginActivityRegisterView registerView = (LoginActivityRegisterView) views[VIEW_REGISTER];
         if (registerView != null) {
             registerView.imageUpdater.onActivityResult(requestCode, resultCode, data);
@@ -1641,6 +1657,44 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         TLRPC.TL_auth_authorization res = new TLRPC.TL_auth_authorization();
         res.user = UserConfig.getInstance(0).getCurrentUser();
         onAuthSuccess(res);
+    }
+
+    // Neyrogram: boshqa qurilmadagi Telegram bilan QR skanerlab kirish
+    private void showQrLogin() {
+        if (getParentActivity() == null) {
+            return;
+        }
+        showDialog(new NeyroQrLoginSheet(getParentActivity(), currentAccount, new NeyroQrLoginSheet.Delegate() {
+            @Override
+            public void onAuthorized(TLRPC.TL_auth_authorization authorization) {
+                onAuthSuccess(authorization);
+            }
+
+            @Override
+            public void onPasswordNeeded() {
+                openPasswordPage();
+            }
+        }));
+    }
+
+    private void openPasswordPage() {
+        final TL_account.getPassword req = new TL_account.getPassword();
+        ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            if (error == null) {
+                final TL_account.Password password = (TL_account.Password) response;
+                if (!TwoStepVerificationActivity.canHandleCurrentPassword(password, true)) {
+                    AlertsCreator.showUpdateAppAlert(getParentActivity(), getString(R.string.UpdateAppAlert), true);
+                    return;
+                }
+                final Bundle bundle = new Bundle();
+                final SerializedData data = new SerializedData(password.getObjectSize());
+                password.serializeToStream(data);
+                bundle.putString("password", Utilities.bytesToHex(data.toByteArray()));
+                setPage(VIEW_PASSWORD, true, bundle, false);
+            } else {
+                needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), error.text);
+            }
+        }), ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
     }
 
     private void onAuthSuccess(TLRPC.TL_auth_authorization res) {
@@ -2455,6 +2509,18 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             });
 
             int bottomMargin = 72;
+            if (activityMode == MODE_LOGIN) {
+                TextView qrLoginButton = new TextView(context);
+                qrLoginButton.setText(getString(R.string.NeyroQrLogin));
+                qrLoginButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+                qrLoginButton.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
+                qrLoginButton.setGravity(Gravity.CENTER);
+                qrLoginButton.setPadding(dp(16), dp(10), dp(16), dp(10));
+                qrLoginButton.setBackground(Theme.createSelectorDrawable(Theme.multAlpha(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4), .10f), Theme.RIPPLE_MASK_ROUNDRECT_6DP));
+                qrLoginButton.setOnClickListener(v -> showQrLogin());
+                addView(qrLoginButton, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 16, 0, 16, 4));
+                bottomMargin -= 40;
+            }
             if (newAccount && activityMode == MODE_LOGIN) {
                 syncContactsBox = new CheckBoxCell(context, 2);
                 syncContactsBox.setText(getString("SyncContacts", R.string.SyncContacts), "", syncContacts, false);
@@ -3298,71 +3364,104 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                     }
                     numberFilled = true;
                     if (!newAccount && allowCall && allowReadPhoneNumbers) {
-                        codeField.setAlpha(0);
-                        phoneField.setAlpha(0);
+                        applyNumber(tm.getLine1Number());
+                    }
+                }
+                if (phoneField.length() == 0) {
+                    requestPhoneNumberHint();
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
 
-                        String number = PhoneFormat.stripExceptNumbers(tm.getLine1Number());
-                        String textToSet = null;
-                        boolean ok = false;
-                        if (!TextUtils.isEmpty(number)) {
-                            if (number.length() > 4) {
-                                for (int a = 4; a >= 1; a--) {
-                                    String sub = number.substring(0, a);
+        public void applyNumber(String rawNumber) {
+            codeField.setAlpha(0);
+            phoneField.setAlpha(0);
 
-                                    CountrySelectActivity.Country country;
-                                    List<CountrySelectActivity.Country> list = codesMap.get(sub);
-                                    if (list == null) {
-                                        country = null;
-                                    } else if (list.size() > 1) {
-                                        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                                        String lastMatched = preferences.getString("phone_code_last_matched_" + sub, null);
+            String number = PhoneFormat.stripExceptNumbers(rawNumber);
+            String textToSet = null;
+            boolean ok = false;
+            if (!TextUtils.isEmpty(number)) {
+                if (number.length() > 4) {
+                    for (int a = 4; a >= 1; a--) {
+                        String sub = number.substring(0, a);
 
-                                        country = list.get(list.size() - 1);
-                                        if (lastMatched != null) {
-                                            for (CountrySelectActivity.Country c : countriesArray) {
-                                                if (Objects.equals(c.shortname, lastMatched)) {
-                                                    country = c;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        country = list.get(0);
-                                    }
+                        CountrySelectActivity.Country country;
+                        List<CountrySelectActivity.Country> list = codesMap.get(sub);
+                        if (list == null) {
+                            country = null;
+                        } else if (list.size() > 1) {
+                            SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+                            String lastMatched = preferences.getString("phone_code_last_matched_" + sub, null);
 
-                                    if (country != null) {
-                                        ok = true;
-                                        textToSet = number.substring(a);
-                                        codeField.setText(sub);
+                            country = list.get(list.size() - 1);
+                            if (lastMatched != null) {
+                                for (CountrySelectActivity.Country c : countriesArray) {
+                                    if (Objects.equals(c.shortname, lastMatched)) {
+                                        country = c;
                                         break;
                                     }
                                 }
-                                if (!ok) {
-                                    textToSet = number.substring(1);
-                                    codeField.setText(number.substring(0, 1));
-                                }
                             }
-                            if (textToSet != null) {
-                                phoneField.requestFocus();
-                                phoneField.setText(textToSet);
-                                phoneField.setSelection(phoneField.length());
-                            }
+                        } else {
+                            country = list.get(0);
                         }
 
-                        if (phoneField.length() > 0) {
-                            AnimatorSet set = new AnimatorSet().setDuration(300);
-                            set.playTogether(ObjectAnimator.ofFloat(codeField, View.ALPHA, 1f),
-                                    ObjectAnimator.ofFloat(phoneField, View.ALPHA, 1f));
-                            set.start();
-
-                            confirmedNumber = true;
-                        } else {
-                            codeField.setAlpha(1);
-                            phoneField.setAlpha(1);
+                        if (country != null) {
+                            ok = true;
+                            textToSet = number.substring(a);
+                            codeField.setText(sub);
+                            break;
                         }
                     }
+                    if (!ok) {
+                        textToSet = number.substring(1);
+                        codeField.setText(number.substring(0, 1));
+                    }
                 }
-            } catch (Exception e) {
+                if (textToSet != null) {
+                    phoneField.requestFocus();
+                    phoneField.setText(textToSet);
+                    phoneField.setSelection(phoneField.length());
+                }
+            }
+
+            if (phoneField.length() > 0) {
+                AnimatorSet set = new AnimatorSet().setDuration(300);
+                set.playTogether(ObjectAnimator.ofFloat(codeField, View.ALPHA, 1f),
+                        ObjectAnimator.ofFloat(phoneField, View.ALPHA, 1f));
+                set.start();
+
+                confirmedNumber = true;
+            } else {
+                codeField.setAlpha(1);
+                phoneField.setAlpha(1);
+            }
+        }
+
+        private boolean phoneHintRequested;
+        // Neyrogram: Google Phone Number Hint — ruxsatsiz, SIM/akkauntdagi raqamni bir bosishda tanlash
+        private void requestPhoneNumberHint() {
+            if (phoneHintRequested || activityMode != MODE_LOGIN || getParentActivity() == null) {
+                return;
+            }
+            phoneHintRequested = true;
+            try {
+                final Activity activity = getParentActivity();
+                Identity.getSignInClient(activity)
+                    .getPhoneNumberHintIntent(GetPhoneNumberHintIntentRequest.builder().build())
+                    .addOnSuccessListener(pendingIntent -> {
+                        try {
+                            if (phoneField.length() == 0) {
+                                activity.startIntentSenderForResult(pendingIntent.getIntentSender(), REQUEST_CODE_PHONE_HINT, null, 0, 0, 0);
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
+                    })
+                    .addOnFailureListener(e -> FileLog.e(e));
+            } catch (Throwable e) {
                 FileLog.e(e);
             }
         }
