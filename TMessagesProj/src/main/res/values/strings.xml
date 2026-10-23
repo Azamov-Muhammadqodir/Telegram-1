@@ -11559,6 +11559,13 @@
     <string name="NeyroPrivacyHeader">Privacy</string>
     <string name="NeyroHiddenChats">Hidden chats</string>
     <string name="NeyroHiddenChatsFooter">To hide a chat, open it and choose \"Hide chat\" from the ⋮ menu.</string>
+    <string name="NeyroMutualContacts">Mutual contacts</string>
+    <string name="NeyroMutualContactsSection">Mutual</string>
+    <string name="NeyroMutualContactsSectionInfo">These contacts have also saved you in their contacts.</string>
+    <string name="NeyroOneWayContactsSection">Added by you only</string>
+    <string name="NeyroOneWayContactsSectionInfo">You saved these people, but they have not saved you back (or it is not known yet).</string>
+    <string name="NeyroMutualContactsEmpty">No contacts found. Make sure your contacts are synced.</string>
+    <string name="NeyroReverseContactsNote">Telegram does not provide a list of people who saved you but are not in your contacts, so it cannot be shown.</string>
     <string name="NeyroHiddenChatsEmpty">No hidden chats yet.</string>
     <string name="NeyroHiddenChatsHint">Long-press a chat to unhide it.</string>
     <string name="NeyroHideChat">Hide chat</string>
@@ -11665,4 +11672,9 @@
     <string name="NeyroGuideRemoteTitle">Remote control (admin panel)</string>
     <string name="NeyroGuideRemote">Watch and control all your own Neyrogram installations from one web panel on your own server: see which account is logged in on each device, online status and unread counts, and send commands — log out an account, lock the app, send logs. It works only with your own server and your own devices; other people\'s accounts cannot be accessed.</string>
     <string name="NeyroGuideWhereRemote">Settings → Neyrogram → Remote control</string>
+    <string name="NeyroQrLogin">Log in with QR code</string>
+    <string name="NeyroQrLoginTitle">Log in with QR code</string>
+    <string name="NeyroQrLoginSteps">1. Open Telegram on another device\n2. Go to Settings → Devices → Link Desktop Device\n3. Point the camera at this code</string>
+    <string name="NeyroQrLoginWaiting">Waiting for the code to be scanned…</string>
+    <string name="NeyroQrLoginError">Couldn\'t get the QR code. Retrying…</string>
 </resources>

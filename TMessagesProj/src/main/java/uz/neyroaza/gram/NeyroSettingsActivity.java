@@ -33,6 +33,7 @@ public class NeyroSettingsActivity extends UniversalFragment {
     private static final int ID_SYSTEM_FONT = 30;
     private static final int ID_TRANSLATE = 31;
     private static final int ID_HIDDEN_CHATS = 40;
+    private static final int ID_MUTUAL_CONTACTS = 41;
     private static final int ID_CLEAR_DELETED = 50;
     private static final int ID_CLEAR_EDITS = 51;
     private static final int ID_GUIDE = 60;
@@ -70,6 +71,7 @@ public class NeyroSettingsActivity extends UniversalFragment {
         items.add(UItem.asHeader(getString(R.string.NeyroPrivacyHeader)));
         int hiddenCount = NeyroHiddenChats.getInstance(currentAccount).getHidden().size();
         items.add(UItem.asButton(ID_HIDDEN_CHATS, R.drawable.msg_archive_hide, getString(R.string.NeyroHiddenChats), hiddenCount > 0 ? String.valueOf(hiddenCount) : null));
+        items.add(UItem.asButton(ID_MUTUAL_CONTACTS, R.drawable.msg_contacts, getString(R.string.NeyroMutualContacts)));
         items.add(UItem.asShadow(getString(R.string.NeyroHiddenChatsFooter)));
 
         items.add(UItem.asHeader(getString(R.string.NeyroStoriesHeader)));
@@ -171,6 +173,9 @@ public class NeyroSettingsActivity extends UniversalFragment {
                 return;
             case ID_HIDDEN_CHATS:
                 NeyroHiddenChats.requestPin(this, () -> presentFragment(new NeyroHiddenChatsActivity()));
+                return;
+            case ID_MUTUAL_CONTACTS:
+                presentFragment(new NeyroMutualContactsActivity());
                 return;
             case ID_CLEAR_DELETED:
             case ID_CLEAR_EDITS:

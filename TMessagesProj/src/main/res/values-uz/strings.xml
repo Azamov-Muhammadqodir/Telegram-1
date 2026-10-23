@@ -28,6 +28,13 @@
     <string name="NeyroPrivacyHeader">Maxfiylik</string>
     <string name="NeyroHiddenChats">Yashirin chatlar</string>
     <string name="NeyroHiddenChatsFooter">Chatni yashirish uchun chatni oching va ⋮ menyusidan \"Chatni yashirish\"ni tanlang.</string>
+    <string name="NeyroMutualContacts">Umumiy kontaktlar</string>
+    <string name="NeyroMutualContactsSection">O\'zaro</string>
+    <string name="NeyroMutualContactsSectionInfo">Bu kontaktlar sizni ham o\'z kontaktiga saqlagan.</string>
+    <string name="NeyroOneWayContactsSection">Faqat siz qo\'shgansiz</string>
+    <string name="NeyroOneWayContactsSectionInfo">Siz bu odamlarni saqlagansiz, lekin ular sizni saqlamagan (yoki hali ma\'lum emas).</string>
+    <string name="NeyroMutualContactsEmpty">Kontaktlar topilmadi. Kontaktlaringiz sinxronlanganini tekshiring.</string>
+    <string name="NeyroReverseContactsNote">Sizni saqlagan, lekin kontaktingizda bo\'lmagan odamlar ro\'yxatini Telegram bermaydi, shuning uchun ko\'rsatib bo\'lmaydi.</string>
     <string name="NeyroHiddenChatsEmpty">Hozircha yashirin chatlar yo\'q.</string>
     <string name="NeyroHiddenChatsHint">Chatni yashirinlikdan chiqarish uchun uni uzoq bosing.</string>
     <string name="NeyroHideChat">Chatni yashirish</string>
@@ -134,4 +141,9 @@
     <string name="NeyroGuideRemoteTitle">Masofaviy boshqaruv (admin panel)</string>
     <string name="NeyroGuideRemote">Barcha o\'z Neyrogram qurilmalaringizni o\'z serveringizdagi bitta web paneldan kuzating va boshqaring: har bir qurilmada qaysi akkaunt kirgan, online holati va o\'qilmagan xabarlar soni ko\'rinadi, hamda buyruq berish mumkin — akkauntdan chiqarish, ilovani qulflash, loglarni yuborish. Faqat o\'z serveringiz va o\'z qurilmalaringiz bilan ishlaydi; boshqalarning akkauntlariga kirib bo\'lmaydi.</string>
     <string name="NeyroGuideWhereRemote">Sozlamalar → Neyrogram → Masofaviy boshqaruv</string>
+    <string name="NeyroQrLogin">QR kod orqali kirish</string>
+    <string name="NeyroQrLoginTitle">QR kod orqali kirish</string>
+    <string name="NeyroQrLoginSteps">1. Boshqa qurilmada Telegram\'ni oching\n2. Sozlamalar → Qurilmalar → Qurilmani ulash bo\'limiga o\'ting\n3. Kamerani shu kodga qarating</string>
+    <string name="NeyroQrLoginWaiting">Kod skanerlanishi kutilmoqda…</string>
+    <string name="NeyroQrLoginError">QR kodni olib bo\'lmadi. Qayta urinilmoqda…</string>
 </resources>

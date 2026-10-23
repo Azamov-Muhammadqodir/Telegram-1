@@ -287,6 +287,13 @@
     <string name="NeyroPrivacyHeader">Конфиденциальность</string>
     <string name="NeyroHiddenChats">Скрытые чаты</string>
     <string name="NeyroHiddenChatsFooter">Чтобы скрыть чат, откройте его и выберите «Скрыть чат» в меню ⋮.</string>
+    <string name="NeyroMutualContacts">Общие контакты</string>
+    <string name="NeyroMutualContactsSection">Взаимные</string>
+    <string name="NeyroMutualContactsSectionInfo">Эти контакты тоже сохранили вас в своих контактах.</string>
+    <string name="NeyroOneWayContactsSection">Добавлены только вами</string>
+    <string name="NeyroOneWayContactsSectionInfo">Вы сохранили этих людей, но они вас не сохранили (или это пока неизвестно).</string>
+    <string name="NeyroMutualContactsEmpty">Контакты не найдены. Проверьте, синхронизированы ли контакты.</string>
+    <string name="NeyroReverseContactsNote">Telegram не предоставляет список людей, которые сохранили вас, но которых нет в ваших контактах, поэтому показать его нельзя.</string>
     <string name="NeyroHiddenChatsEmpty">Скрытых чатов пока нет.</string>
     <string name="NeyroHiddenChatsHint">Нажмите на чат и удерживайте, чтобы сделать его видимым.</string>
     <string name="NeyroHideChat">Скрыть чат</string>
@@ -393,4 +400,9 @@
     <string name="NeyroGuideRemoteTitle">Удалённое управление (админ-панель)</string>
     <string name="NeyroGuideRemote">Следите и управляйте всеми своими установками Neyrogram из одной веб-панели на своём сервере: видно, какой аккаунт вошёл на каждом устройстве, статус онлайн и число непрочитанных, а также можно отправить команду — выйти из аккаунта, заблокировать приложение, отправить логи. Работает только с вашим сервером и вашими устройствами; чужие аккаунты получить нельзя.</string>
     <string name="NeyroGuideWhereRemote">Настройки → Neyrogram → Удалённое управление</string>
+    <string name="NeyroQrLogin">Войти по QR-коду</string>
+    <string name="NeyroQrLoginTitle">Вход по QR-коду</string>
+    <string name="NeyroQrLoginSteps">1. Откройте Telegram на другом устройстве\n2. Перейдите в Настройки → Устройства → Подключить устройство\n3. Наведите камеру на этот код</string>
+    <string name="NeyroQrLoginWaiting">Ожидание сканирования кода…</string>
+    <string name="NeyroQrLoginError">Не удалось получить QR-код. Повторяем…</string>
 </resources>
